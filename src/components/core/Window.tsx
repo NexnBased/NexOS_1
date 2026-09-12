@@ -1,34 +1,21 @@
-import { MaximizeIcon, MinimizeIcon, XIcon } from "lucide-react";
-import type { ComponentType, MouseEvent as ReactMouseEvent } from "react";
-
-export interface WindowData {
-  id: string;
-  title: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  zIndex: number;
-  component: ComponentType<{
-    width: number;
-    height: number;
-  }>;
-}
-
-interface Viewport {
-  width: number;
-  height: number;
-}
+import { CopyIcon, MaximizeIcon, MinimizeIcon, XIcon } from "lucide-react";
+import type { MouseEvent as ReactMouseEvent } from "react";
+import { type WindowData } from "../../types/window";
 
 interface WindowProps {
   window: WindowData;
-  viewport?: Viewport;
+  viewport?: {
+    width: number;
+    height: number;
+  };
   onClose?: () => void;
   onMinimize?: () => void;
   onMaximize?: () => void;
   onFocus?: (id: string) => void;
   onMove?: (position: { x: number; y: number }) => void;
   onResize?: (size: { width: number; height: number }) => void;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
 }
 
 function Window({
@@ -40,7 +27,10 @@ function Window({
   onFocus,
   onMove,
   onResize,
+  onPointerEnter,
+  onPointerLeave,
 }: WindowProps) {
+  if (window.minimized) { return null; }
   const App = window.component;
 
   const startResize = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -71,6 +61,8 @@ function Window({
 
   return (
     <div
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       style={{
         left: window.x,
         top: window.y,
@@ -82,8 +74,10 @@ function Window({
       className="absolute flex flex-col rounded-md backdrop-blur-xs overflow-hidden"
     >
       <div
-        onMouseDown={(e: ReactMouseEvent<HTMLDivElement>) => {
+        onMouseDown={(e) => {
+          if (e.target !== e.currentTarget) { return; }
           onFocus?.(window.id);
+          if (window.maximized) { return; }
 
           const startX = e.clientX;
           const startY = e.clientY;
@@ -92,8 +86,8 @@ function Window({
 
           const onMouseMove = (ev: MouseEvent) => {
             onMove?.({
-              x: baseX + (ev.clientX - startX),
-              y: baseY + (ev.clientY - startY),
+              x: baseX + ev.clientX - startX,
+              y: baseY + ev.clientY - startY,
             });
           };
 
@@ -110,20 +104,43 @@ function Window({
         <div>{window.title}</div>
 
         <div className="flex gap-2 flex-row size-fit">
-          <button onClick={onMinimize}><MinimizeIcon size={20} /></button>
-          <button onClick={onMaximize}><MaximizeIcon size={20} /></button>
-          <button onClick={onClose}><XIcon size={24} /></button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMaximize?.();
+            }}
+            className="p-0.5 rounded-md! flex items-center justify-center text-white bg-yellow-500 hover:bg-yellow-600"
+          >
+            {window.maximized
+              ? (<MaximizeIcon size={15} />)
+              : (<CopyIcon size={15} />)
+            }
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMinimize?.();
+            }}
+            className="p-0.5 rounded-md! flex items-center justify-center text-white bg-green-500 hover:bg-green-600"
+          ><MinimizeIcon size={15} /></button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose?.();
+            }}
+            className="p-0.5 rounded-md! flex items-center justify-center text-white bg-red-500 hover:bg-red-600"
+          ><XIcon size={15} /></button>
         </div>
       </div>
 
-      <div className="flex-1 p-3 w-full min-h-0 min-w-0 relative overflow-hidden">
+      <div className="flex-1 w-full min-h-0 min-w-0 relative overflow-hidden">
         <App
           width={viewport?.width ?? window.width}
           height={viewport?.height ?? window.height}
         />
       </div>
 
-      <div onMouseDown={startResize} className="absolute right-0 -bottom-1.5 size-fit rotate-90 cursor-nwse-resize">
+      <div onMouseDown={startResize} className="absolute right-0 -bottom-1.5 size-fit rotate-90 cursor-nwse-resize opacity-50 select-none touch-none">
         &#9701;
       </div>
     </div>
