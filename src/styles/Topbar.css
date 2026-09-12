@@ -1,0 +1,14 @@
+@reference "tailwindcss";
+
+button {
+  @apply font-bold text-[14px] rounded-xl transition-all;
+}
+
+div[role="menu"],
+div[aria-label="Calendar"] {
+  @apply mt-5 rounded-md bg-black/60 backdrop-blur-xs absolute top-full z-50;
+}
+
+div[role="menu"] {
+  @apply h-fit flex;
+}
