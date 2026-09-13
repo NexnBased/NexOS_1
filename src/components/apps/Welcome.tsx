@@ -5,7 +5,8 @@ interface Props {
 
 function Welcome({ width, height }: Props) {
   return (
-    <div className=""
+    <div
+      className=""
       style={{
         width,
         height,

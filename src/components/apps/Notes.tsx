@@ -20,34 +20,40 @@ function Notes() {
     } catch {}
     return [
       {
-        id: '1',
-        title: '',
-        content: 'Write whatever you want to!',
+        id: "1",
+        title: "",
+        content: "Write whatever you want to!",
         updatedAt: Date.now(),
-      }
+      },
     ];
   });
 
-  const [activeId, setActiveId] = useState<string>(() => notes[0]?.id || '');
-  useEffect(() => { localStorage.setItem(StorageKey, JSON.stringify(notes)); }, [notes]);
+  const [activeId, setActiveId] = useState<string>(() => notes[0]?.id || "");
+  useEffect(() => {
+    localStorage.setItem(StorageKey, JSON.stringify(notes));
+  }, [notes]);
   const activeNote = notes.find((n) => n.id === activeId);
 
   const addNote = () => {
     if (notes.length >= MaxNotes) return;
     const newNote: Note = {
       id: Date.now().toString(),
-      title: '',
-      content: '',
+      title: "",
+      content: "",
       updatedAt: Date.now(),
     };
     setNotes([newNote, ...notes]);
     setActiveId(newNote.id);
   };
 
-  const updateNote = (field: 'title' | 'content', value: string) => {
-    const nextValue = field === 'content' ? value.slice(0, MaxChars) : value;
+  const updateNote = (field: "title" | "content", value: string) => {
+    const nextValue = field === "content" ? value.slice(0, MaxChars) : value;
     setNotes(
-      notes.map((n) => n.id === activeId ? { ...n, [field]: nextValue, updatedAt: Date.now() } : n)
+      notes.map((n) =>
+        n.id === activeId
+          ? { ...n, [field]: nextValue, updatedAt: Date.now() }
+          : n,
+      ),
     );
   };
 
@@ -56,7 +62,7 @@ function Notes() {
     const filtered = notes.filter((n) => n.id !== id);
     setNotes(filtered);
     if (activeId === id) {
-      setActiveId(filtered[0]?.id || '');
+      setActiveId(filtered[0]?.id || "");
     }
   };
 
@@ -69,8 +75,8 @@ function Notes() {
             disabled={notes.length >= MaxNotes}
             className={`w-full py-1 px-2 text-[11px] font-medium rounded transition-colors flex items-center justify-center gap-1.5 ${
               notes.length >= MaxNotes
-                ? 'bg-zinc-800/40 text-zinc-600 cursor-not-allowed'
-                : 'bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white shadow-sm'
+                ? "bg-zinc-800/40 text-zinc-600 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white shadow-sm"
             }`}
           >
             <PlusIcon className="w-3.5 h-3.5" />
@@ -81,7 +87,9 @@ function Notes() {
         {}
         <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
           {notes.length === 0 ? (
-            <div className="p-4 text-center text-[10px] text-zinc-600">No notes</div>
+            <div className="p-4 text-center text-[10px] text-zinc-600">
+              No notes
+            </div>
           ) : (
             notes.map((note) => {
               const active = note.id === activeId;
@@ -91,13 +99,13 @@ function Notes() {
                   onClick={() => setActiveId(note.id)}
                   className={`group relative p-2 rounded cursor-pointer transition-colors flex flex-col gap-0.5 ${
                     active
-                      ? 'bg-purple-900/30 text-purple-200 border-l-2 border-purple-500'
-                      : 'hover:bg-zinc-800/50 text-zinc-400 hover:text-zinc-200'
+                      ? "bg-purple-900/30 text-purple-200 border-l-2 border-purple-500"
+                      : "hover:bg-zinc-800/50 text-zinc-400 hover:text-zinc-200"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[11px] font-medium truncate flex-1">
-                      {note.title.trim() || 'Untitled'}
+                      {note.title.trim() || "Untitled"}
                     </span>
                     <button
                       onClick={(e) => deleteNote(note.id, e)}
@@ -107,7 +115,7 @@ function Notes() {
                     </button>
                   </div>
                   <div className="text-[10px] text-zinc-500 truncate opacity-70 font-mono">
-                    {note.content || 'Empty note'}
+                    {note.content || "Empty note"}
                   </div>
                 </div>
               );
@@ -124,7 +132,7 @@ function Notes() {
               <input
                 type="text"
                 value={activeNote.title}
-                onChange={(e) => updateNote('title', e.target.value)}
+                onChange={(e) => updateNote("title", e.target.value)}
                 placeholder="Title..."
                 className="bg-transparent text-xs font-semibold text-zinc-100 placeholder:text-zinc-600 focus:outline-none flex-1 tracking-wide"
               />
@@ -139,7 +147,7 @@ function Notes() {
 
             <textarea
               value={activeNote.content}
-              onChange={(e) => updateNote('content', e.target.value)}
+              onChange={(e) => updateNote("content", e.target.value)}
               maxLength={MaxChars}
               placeholder="Start typing..."
               className="flex-1 w-full p-4 bg-transparent text-xs text-zinc-300 placeholder:text-zinc-700 resize-none focus:outline-none leading-relaxed selection:bg-purple-900 selection:text-purple-100 font-mono"
@@ -153,7 +161,7 @@ function Notes() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export default Notes;

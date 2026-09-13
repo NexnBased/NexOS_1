@@ -53,7 +53,7 @@ export const useWindowStore = create<WindowStore>((set) => ({
   nextZIndex: 1,
   hoveredWindowId: null,
   setHoveredWindow: (id) => {
-    set({ hoveredWindowId: id, })
+    set({ hoveredWindowId: id });
   },
 
   openWindow: (appId, options) => {

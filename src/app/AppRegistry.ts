@@ -17,6 +17,9 @@ export interface AppDefinition {
   minWidth?: number;
   minHeight?: number;
   icon?: string;
+  showInLauncher?: boolean;
+  showOnDesktop?: boolean;
+  showInDock?: boolean;
 }
 
 export const AppRegistry: Record<string, AppDefinition> = {
@@ -29,6 +32,9 @@ export const AppRegistry: Record<string, AppDefinition> = {
     minWidth: 400,
     minHeight: 150,
     icon: "https://i.pinimg.com/1200x/48/49/ac/4849aca80f124fcec6d446e159449b58.jpg",
+    showInLauncher: false,
+    showOnDesktop: true,
+    showInDock: false,
   },
   calculator: {
     id: "calculator",
@@ -39,6 +45,9 @@ export const AppRegistry: Record<string, AppDefinition> = {
     minWidth: 350,
     minHeight: 500,
     icon: "https://i.pinimg.com/736x/43/e3/61/43e36102d3e2a48a1e9661e4c39b64bc.jpg",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: true,
   },
   notes: {
     id: "notes",
@@ -49,5 +58,8 @@ export const AppRegistry: Record<string, AppDefinition> = {
     minWidth: 800,
     minHeight: 500,
     icon: "https://i.pinimg.com/736x/8c/de/74/8cde744c0bca6d1cf6c0dde004548451.jpg",
-  }
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: true,
+  },
 };

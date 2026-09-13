@@ -30,7 +30,9 @@ function Window({
   onPointerEnter,
   onPointerLeave,
 }: WindowProps) {
-  if (window.minimized) { return null; }
+  if (window.minimized) {
+    return null;
+  }
   const App = window.component;
 
   const startResize = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -75,9 +77,13 @@ function Window({
     >
       <div
         onMouseDown={(e) => {
-          if (e.target !== e.currentTarget) { return; }
+          if (e.target !== e.currentTarget) {
+            return;
+          }
           onFocus?.(window.id);
-          if (window.maximized) { return; }
+          if (window.maximized) {
+            return;
+          }
 
           const startX = e.clientX;
           const startY = e.clientY;
@@ -111,10 +117,11 @@ function Window({
             }}
             className="p-0.5 rounded-md! flex items-center justify-center text-white bg-yellow-500 hover:bg-yellow-600"
           >
-            {window.maximized
-              ? (<MaximizeIcon size={15} />)
-              : (<CopyIcon size={15} />)
-            }
+            {window.maximized ? (
+              <MaximizeIcon size={15} />
+            ) : (
+              <CopyIcon size={15} />
+            )}
           </button>
           <button
             onClick={(e) => {
@@ -122,14 +129,18 @@ function Window({
               onMinimize?.();
             }}
             className="p-0.5 rounded-md! flex items-center justify-center text-white bg-green-500 hover:bg-green-600"
-          ><MinimizeIcon size={15} /></button>
+          >
+            <MinimizeIcon size={15} />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onClose?.();
             }}
             className="p-0.5 rounded-md! flex items-center justify-center text-white bg-red-500 hover:bg-red-600"
-          ><XIcon size={15} /></button>
+          >
+            <XIcon size={15} />
+          </button>
         </div>
       </div>
 
@@ -140,11 +151,14 @@ function Window({
         />
       </div>
 
-      <div onMouseDown={startResize} className="absolute right-0 -bottom-1.5 size-fit rotate-90 cursor-nwse-resize opacity-50 select-none touch-none">
+      <div
+        onMouseDown={startResize}
+        className="absolute right-0 -bottom-1.5 size-fit rotate-90 cursor-nwse-resize opacity-50 select-none touch-none"
+      >
         &#9701;
       </div>
     </div>
-  )
+  );
 }
 
 export default Window;

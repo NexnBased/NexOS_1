@@ -1,8 +1,10 @@
-import { useRef, useState, useEffect, } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
+import { AppRegistry } from "../../app/AppRegistry";
 
 import Dock from "../Dock";
 import DesktopIcon from "./DesktopIcon";
 import WindowManager from "./WindowManager";
+import AppLauncher from "./AppLauncher";
 
 function Desktop() {
   const desktopRef = useRef<HTMLElement>(null);
@@ -14,7 +16,9 @@ function Desktop() {
 
   useEffect(() => {
     const element = desktopRef.current;
-    if (!element) { return; }
+    if (!element) {
+      return;
+    }
 
     const updateSize = () => {
       setViewport({
@@ -27,7 +31,15 @@ function Desktop() {
     const observer = new ResizeObserver(updateSize);
     observer.observe(element);
 
-    return () => { observer.disconnect(); };
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const desktopApps = useMemo(() => {
+    return Object.values(AppRegistry).filter(
+      (app) => app.showOnDesktop !== false,
+    );
   }, []);
 
   const wallpaperUrl =
@@ -37,12 +49,13 @@ function Desktop() {
     <main
       ref={desktopRef}
       className="relative size-full overflow-hidden bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: `url(${wallpaperUrl})`, }}
+      style={{ backgroundImage: `url(${wallpaperUrl})` }}
     >
-      <DesktopIcon appId="welcome" x={24} y={24} />
-      <DesktopIcon appId="calculator" x={24} y={120} />
-      <DesktopIcon appId="notes" x={24} y={216} />
+      {desktopApps.map((app, index) => (
+        <DesktopIcon x={24} y={24 + index * 96} key={app.id} appId={app.id} />
+      ))}
 
+      <AppLauncher />
       <WindowManager viewport={viewport} />
       <Dock />
     </main>
