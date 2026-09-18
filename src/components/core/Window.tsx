@@ -1,4 +1,3 @@
-import { CopyIcon, MaximizeIcon, MinimizeIcon, XIcon } from "lucide-react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { type WindowData } from "../../types/window";
 
@@ -107,7 +106,7 @@ function Window({
         }}
         className="flex shrink-0 justify-between pl-1 pr-1 items-center text-purple-800 bg-purple-200/50 p-[6px 10px] cursor-grab active:cursor-grabbing"
       >
-        <div>{window.title}</div>
+        <p className="font-bold tracking-wide select-none pointer-events-none">{window.title}</p>
 
         <div className="flex gap-2 flex-row size-fit">
           <button
@@ -115,32 +114,22 @@ function Window({
               e.stopPropagation();
               onMaximize?.();
             }}
-            className="p-0.5 rounded-md! flex items-center justify-center text-white bg-yellow-500 hover:bg-yellow-600"
-          >
-            {window.maximized ? (
-              <MaximizeIcon size={15} />
-            ) : (
-              <CopyIcon size={15} />
-            )}
-          </button>
+            className="size-4 rounded-full bg-yellow-500 hover:bg-yellow-800"
+          />
           <button
             onClick={(e) => {
               e.stopPropagation();
               onMinimize?.();
             }}
-            className="p-0.5 rounded-md! flex items-center justify-center text-white bg-green-500 hover:bg-green-600"
-          >
-            <MinimizeIcon size={15} />
-          </button>
+            className="size-4 rounded-full bg-green-500 hover:bg-green-800"
+          />
           <button
             onClick={(e) => {
               e.stopPropagation();
               onClose?.();
             }}
-            className="p-0.5 rounded-md! flex items-center justify-center text-white bg-red-500 hover:bg-red-600"
-          >
-            <XIcon size={15} />
-          </button>
+            className="size-4 rounded-full bg-red-500 hover:bg-red-800"
+          />
         </div>
       </div>
 
@@ -153,7 +142,7 @@ function Window({
 
       <div
         onMouseDown={startResize}
-        className="absolute right-0 -bottom-1.5 size-fit rotate-90 cursor-nwse-resize opacity-50 select-none touch-none"
+        className="absolute right-0.5 -bottom-0.5 size-fit rotate-90 cursor-nwse-resize opacity-10 select-none touch-none"
       >
         &#9701;
       </div>

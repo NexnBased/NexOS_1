@@ -84,59 +84,16 @@ function Topbar() {
   return (
     <header
       ref={menuRef}
-      className="w-full h-10 p-1 pr-2 pl-2 flex flex-row items-center justify-between border-b border-b-white/25 bg-black/60"
+      className="w-full h-10 p-1 pr-2 pl-2 flex flex-row items-center justify-between border-b border-b-white/25 bg-zinc-900"
     >
       <section className="relative w-1/3 flex flex-row gap-1 items-center justify-start">
         <button
           type="button"
-          onClick={() => toggleMenu("MenuAbout")}
-          aria-expanded={openMenu === "MenuAbout"}
-          aria-haspopup="menu"
-          className={`w-18 h-6 tracking-wider text-purple-400 hover:bg-purple-200/20 ${openMenu === "MenuAbout" ? "bg-purple-200/20" : ""}`}
+          className="w-18 h-6 tracking-wider text-purple-400"
+          disabled
         >
           NexOS
         </button>
-        <AnimatePresence>
-          {openMenu === "MenuAbout" && (
-            <motion.div
-              key="menu-about"
-              role="menu"
-              initial={{ opacity: 0, y: -6, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.97 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              className="w-50 left-1.5 flex-col items-center"
-            >
-              <p className="mt-5 text-3xl font-medium text-purple-400 tracking-wider">
-                NexOS
-              </p>
-              <p className="mt-2 text-[15px] font-mono! text-purple-400 tracking-wider">
-                Build 1.0.0
-              </p>
-              <a
-                href="https://github.com/NexnBased/NexOS_1"
-                rel="noopener noreferrer"
-                target="_blank"
-                className="w-30 h-fit p-1 mt-7 text-center bg-purple-200/20 rounded-full text-[15px] font-medium text-purple-400 tracking-wider"
-                onClick={() => setOpenMenu(null)}
-              >
-                Source code
-              </a>
-              <p className="mt-4 mb-4 text-[14px]">
-                Developed by{" "}
-                <a
-                  href="https://github.com/NexnBased"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  className="text-purple-400 hover:text-purple-200"
-                  onClick={() => setOpenMenu(null)}
-                >
-                  NexnBased
-                </a>
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </section>
       <section className="relative w-1/3 flex flex-row gap-1 items-center justify-center">
         <button
@@ -166,15 +123,15 @@ function Topbar() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.97 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="w-40 left-2/5 flex-col items-center"
+              className="min-w-50 max-w-80 left-2/5 flex-col items-center"
             >
-              <p className="mt-5 text-3xl font-medium text-purple-400 tracking-wider">
+              <p className="mt-5 text-3xl font-bold text-purple-400 tracking-wider">
                 {currentTime.format("HH:mm:ss")}
               </p>
-              <p className="w-30 h-fit p-1 mt-4 text-center bg-purple-200/20 rounded-full text-[15px] font-medium text-purple-400 tracking-wider">
+              <p className="w-fit pr-3 pl-3 h-fit p-1 mt-4 text-center bg-purple-200/20 rounded-full text-[15px] font-medium text-purple-400 tracking-wider">
                 {Intl.DateTimeFormat().resolvedOptions().timeZone}
               </p>
-              <p className="w-30 h-fit p-1 mt-2 mb-4 text-center bg-purple-200/20 rounded-full text-[15px] font-medium text-purple-400 tracking-wider">
+              <p className="w-fit pr-3 pl-3 h-fit p-1 mt-2 mb-4 text-center bg-purple-200/20 rounded-full text-[15px] font-medium text-purple-400 tracking-wider">
                 {navigator.language}
               </p>
             </motion.div>
@@ -271,17 +228,17 @@ function Topbar() {
                     {location.ip
                       ? location.ip.includes(":")
                         ? location.ip
-                            .split(":")
-                            .map((part, i, arr) =>
-                              i > 0 && i < arr.length - 1 ? "****" : part,
-                            )
-                            .join(":")
+                          .split(":")
+                          .map((part, i, arr) =>
+                            i > 0 && i < arr.length - 1 ? "****" : part,
+                          )
+                          .join(":")
                         : location.ip
-                            .split(".")
-                            .map((part, i) =>
-                              i === 1 || i === 2 ? "***" : part,
-                            )
-                            .join(".")
+                          .split(".")
+                          .map((part, i) =>
+                            i === 1 || i === 2 ? "***" : part,
+                          )
+                          .join(".")
                       : ""}
                   </p>
                 </section>

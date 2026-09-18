@@ -127,8 +127,8 @@ function Calculator() {
   }, [handleDigit, handleOp, handleEquals, handleDelete, handleClear]);
 
   return (
-    <div className="w-full h-full bg-zinc-950 text-zinc-100 font-mono select-none flex flex-col p-4 justify-between rounded-none">
-      <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 flex flex-col justify-end text-right min-h-24 mb-4">
+    <div className="w-full h-full bg-purple-200/50 text-zinc-100 select-none flex flex-col p-4 justify-between">
+      <div className="p-4 rounded-xl bg-zinc-900 flex flex-col justify-end text-right min-h-24 mb-4">
         <div className="text-xs text-zinc-500 min-h-4 overflow-x-auto whitespace-nowrap scrollbar-none">
           {expr}
         </div>
@@ -142,7 +142,7 @@ function Calculator() {
           onClick={handleClear}
           className={`py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
             activeKey === "Escape" ? "ring-2 ring-rose-500" : ""
-          } bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20`}
+          } bg-rose-500/90 hover:bg-rose-500/60 text-rose-50`}
         >
           AC
         </button>
@@ -151,14 +151,14 @@ function Calculator() {
           onClick={handleDelete}
           className={`py-3.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
             activeKey === "Backspace" ? "ring-2 ring-zinc-400" : ""
-          } bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 border border-zinc-700/50`}
+          } bg-zinc-800/60 hover:bg-zinc-800 text-zinc-100`}
         >
           <Delete className="w-4 h-4" />
         </button>
 
         <button
           onClick={handlePercent}
-          className="py-3.5 rounded-xl flex items-center justify-center transition-all active:scale-95 bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 border border-zinc-700/50"
+          className="py-3.5 rounded-xl flex items-center justify-center transition-all active:scale-95 bg-zinc-800/60 hover:bg-zinc-800 text-zinc-100"
         >
           <Percent className="w-4 h-4" />
         </button>
@@ -167,7 +167,7 @@ function Calculator() {
           onClick={() => handleOp("÷")}
           className={`py-3.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
             activeKey === "/" ? "ring-2 ring-purple-400" : ""
-          } bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20`}
+          } bg-purple-500/90 hover:bg-purple-500/80 text-purple-50`}
         >
           <Divide className="w-4 h-4" />
         </button>
@@ -178,7 +178,7 @@ function Calculator() {
             onClick={() => handleDigit(num)}
             className={`py-3.5 rounded-xl text-base font-semibold transition-all active:scale-95 ${
               activeKey === num ? "ring-2 ring-purple-400" : ""
-            } bg-zinc-800/40 hover:bg-zinc-800 text-zinc-100 border border-zinc-800`}
+            } bg-zinc-800/80 hover:bg-zinc-800 text-zinc-100`}
           >
             {num}
           </button>
@@ -188,7 +188,7 @@ function Calculator() {
           onClick={() => handleOp("×")}
           className={`py-3.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
             activeKey === "*" ? "ring-2 ring-purple-400" : ""
-          } bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20`}
+          } bg-purple-500/90 hover:bg-purple-500/80 text-purple-50`}
         >
           <X className="w-4 h-4" />
         </button>
@@ -199,7 +199,7 @@ function Calculator() {
             onClick={() => handleDigit(num)}
             className={`py-3.5 rounded-xl text-base font-semibold transition-all active:scale-95 ${
               activeKey === num ? "ring-2 ring-purple-400" : ""
-            } bg-zinc-800/40 hover:bg-zinc-800 text-zinc-100 border border-zinc-800`}
+            } bg-zinc-800/80 hover:bg-zinc-800 text-zinc-100`}
           >
             {num}
           </button>
@@ -209,7 +209,7 @@ function Calculator() {
           onClick={() => handleOp("−")}
           className={`py-3.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
             activeKey === "-" ? "ring-2 ring-purple-400" : ""
-          } bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20`}
+          } bg-purple-500/90 hover:bg-purple-500/80 text-purple-50`}
         >
           <Minus className="w-4 h-4" />
         </button>
@@ -220,7 +220,7 @@ function Calculator() {
             onClick={() => handleDigit(num)}
             className={`py-3.5 rounded-xl text-base font-semibold transition-all active:scale-95 ${
               activeKey === num ? "ring-2 ring-purple-400" : ""
-            } bg-zinc-800/40 hover:bg-zinc-800 text-zinc-100 border border-zinc-800`}
+            } bg-zinc-800/80 hover:bg-zinc-800 text-zinc-100`}
           >
             {num}
           </button>
@@ -230,14 +230,14 @@ function Calculator() {
           onClick={() => handleOp("+")}
           className={`py-3.5 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
             activeKey === "+" ? "ring-2 ring-purple-400" : ""
-          } bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20`}
+          } bg-purple-500/90 hover:bg-purple-500/80 text-purple-50`}
         >
           <Plus className="w-4 h-4" />
         </button>
 
         <button
           onClick={handleSign}
-          className="py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 border border-zinc-700/50"
+          className="py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300"
         >
           ±
         </button>
@@ -246,7 +246,7 @@ function Calculator() {
           onClick={() => handleDigit("0")}
           className={`py-3.5 rounded-xl text-base font-semibold transition-all active:scale-95 ${
             activeKey === "0" ? "ring-2 ring-purple-400" : ""
-          } bg-zinc-800/40 hover:bg-zinc-800 text-zinc-100 border border-zinc-800`}
+          } bg-zinc-800/80 hover:bg-zinc-800 text-zinc-100`}
         >
           0
         </button>
@@ -255,7 +255,7 @@ function Calculator() {
           onClick={() => handleDigit(".")}
           className={`py-3.5 rounded-xl text-base font-semibold transition-all active:scale-95 ${
             activeKey === "." ? "ring-2 ring-purple-400" : ""
-          } bg-zinc-800/40 hover:bg-zinc-800 text-zinc-100 border border-zinc-800`}
+          } bg-zinc-800/80 hover:bg-zinc-800 text-zinc-100`}
         >
           .
         </button>

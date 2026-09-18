@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusIcon, Trash2Icon, FileTextIcon } from "lucide-react";
+import { Trash2Icon, FileTextIcon } from "lucide-react";
 
 interface Note {
   id: string;
@@ -67,29 +67,24 @@ function Notes() {
   };
 
   return (
-    <div className="w-full h-full bg-zinc-950 text-zinc-200 font-sans flex select-none rounded-none overflow-hidden text-xs">
-      <div className="w-48 border-r border-zinc-800/80 flex flex-col bg-zinc-900/40 shrink-0">
-        <div className="p-2 border-b border-zinc-800/80 flex items-center justify-between">
+    <div className="w-full h-full flex select-none overflow-hidden bg-purple-200/50">
+      <div className="w-48 flex flex-col shrink-0">
+        <div className="p-2 flex items-center justify-between">
           <button
             onClick={addNote}
             disabled={notes.length >= MaxNotes}
-            className={`w-full py-1 px-2 text-[11px] font-medium rounded transition-colors flex items-center justify-center gap-1.5 ${
+            className={`w-full py-1 px-2 text-[11px] font-medium rounded-md! transition-colors ${
               notes.length >= MaxNotes
-                ? "bg-zinc-800/40 text-zinc-600 cursor-not-allowed"
-                : "bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white shadow-sm"
+                ? "bg-zinc-800/40 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white"
             }`}
           >
-            <PlusIcon className="w-3.5 h-3.5" />
-            <span>New Note</span>
+            New Note
           </button>
         </div>
-
-        {}
         <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
           {notes.length === 0 ? (
-            <div className="p-4 text-center text-[10px] text-zinc-600">
-              No notes
-            </div>
+            <div className="p-4 text-center text-[10px] text-purple-950">Empty!</div>
           ) : (
             notes.map((note) => {
               const active = note.id === activeId;
@@ -97,38 +92,32 @@ function Notes() {
                 <div
                   key={note.id}
                   onClick={() => setActiveId(note.id)}
-                  className={`group relative p-2 rounded cursor-pointer transition-colors flex flex-col gap-0.5 ${
+                  className={`group relative p-2 rounded-md cursor-pointer transition-colors flex flex-col gap-0.5 ${
                     active
-                      ? "bg-purple-900/30 text-purple-200 border-l-2 border-purple-500"
-                      : "hover:bg-zinc-800/50 text-zinc-400 hover:text-zinc-200"
+                      ? "bg-purple-200/50 text-black/80"
+                      : "hover:bg-purple-200/20 text-black/40 hover:text-black/80"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-[11px] font-medium truncate flex-1">
-                      {note.title.trim() || "Untitled"}
-                    </span>
+                    <span className="text-[11px] font-bold tracking-tight truncate flex-1">{note.title.trim() || "Untitled"}</span>
                     <button
                       onClick={(e) => deleteNote(note.id, e)}
-                      className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-rose-400 p-0.5 rounded hover:bg-zinc-800 transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 text-black/50 hover:text-rose-400 transition-opacity"
                     >
-                      <Trash2Icon className="w-3 h-3" />
+                      <Trash2Icon className="size-3" strokeWidth={3} />
                     </button>
                   </div>
-                  <div className="text-[10px] text-zinc-500 truncate opacity-70 font-mono">
-                    {note.content || "Empty note"}
-                  </div>
+                  <div className="text-[10px] text-zinc-500 truncate opacity-70 font-mono">{note.content || "Empty note"}</div>
                 </div>
               );
             })
           )}
         </div>
       </div>
-
-      {}
-      <div className="flex-1 flex flex-col bg-zinc-950">
+      <div className="flex-1 flex flex-col bg-neutral-950 rounded-lg m-1">
         {activeNote ? (
           <>
-            <div className="px-3 py-2 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/20">
+            <div className="px-3 py-2 border-b border-zinc-800/80 flex items-center justify-between">
               <input
                 type="text"
                 value={activeNote.title}
@@ -138,10 +127,10 @@ function Notes() {
               />
               <button
                 onClick={(e) => deleteNote(activeNote.id, e)}
-                className="text-zinc-500 hover:text-rose-400 p-1 rounded hover:bg-zinc-800 transition-colors"
+                className="text-white/50 hover:text-rose-400 transition-colors p-1"
                 title="Delete note"
               >
-                <Trash2Icon className="w-3.5 h-3.5" />
+                <Trash2Icon className="size-4" strokeWidth={2} />
               </button>
             </div>
 
@@ -150,13 +139,15 @@ function Notes() {
               onChange={(e) => updateNote("content", e.target.value)}
               maxLength={MaxChars}
               placeholder="Start typing..."
-              className="flex-1 w-full p-4 bg-transparent text-xs text-zinc-300 placeholder:text-zinc-700 resize-none focus:outline-none leading-relaxed selection:bg-purple-900 selection:text-purple-100 font-mono"
+              className="flex-1 w-full p-4 bg-transparent text-xs text-zinc-300 placeholder:text-zinc-700 resize-none focus:outline-none leading-relaxed selection:bg-violet-950 selection:text-purple-100 font-mono"
             />
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-600 gap-2">
-            <FileTextIcon className="w-6 h-6 text-zinc-700" />
-            <span className="text-[11px] text-zinc-600">No note selected</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-white/60 gap-2">
+            <FileTextIcon className="size-6 text-white/70" />
+            {notes.length === 0 ?
+            <span className="text-xs text-white/60">Create a new Note</span>
+          : <span className="text-xs text-white/60">No note selected</span>}
           </div>
         )}
       </div>

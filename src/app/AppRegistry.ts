@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import Welcome from "../components/apps/Welcome";
 import Calculator from "../components/apps/Calculator";
 import Notes from "../components/apps/Notes";
+import Files from "../components/apps/Files";
 
 export interface AppProps {
   width: number;
@@ -44,7 +45,7 @@ export const AppRegistry: Record<string, AppDefinition> = {
     defaultHeight: 500,
     minWidth: 350,
     minHeight: 500,
-    icon: "https://i.pinimg.com/736x/43/e3/61/43e36102d3e2a48a1e9661e4c39b64bc.jpg",
+    icon: "https://i.pinimg.com/736x/88/8d/3f/888d3fb1d57bd69f2c52fb89d5abf7e7.jpg",
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: true,
@@ -58,6 +59,19 @@ export const AppRegistry: Record<string, AppDefinition> = {
     minWidth: 800,
     minHeight: 500,
     icon: "https://i.pinimg.com/736x/8c/de/74/8cde744c0bca6d1cf6c0dde004548451.jpg",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: true,
+  },
+  files: {
+    id: "files",
+    title: "Files",
+    component: Files,
+    defaultWidth: 800,
+    defaultHeight: 500,
+    minWidth: 500,
+    minHeight: 350,
+    icon: "https://i.pinimg.com/736x/95/13/dd/9513dd6721787751f30ec543236487fc.jpg",
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: true,
