@@ -2,9 +2,16 @@ import { create } from "zustand";
 import { AppRegistry } from "../app/AppRegistry";
 import type { WindowData } from "../types/window";
 
+const welcomeAppDismissedKey = "nexos.welcome-dismissed";
+
 interface WindowStore {
   windows: WindowData[];
   nextZIndex: number;
+  desktopViewport: {
+    width: number;
+    height: number;
+  };
+  setDesktopViewport: (viewport: { width: number; height: number }) => void;
 
   openWindow: (
     appId: string,
@@ -55,6 +62,49 @@ export const useWindowStore = create<WindowStore>((set) => ({
   setHoveredWindow: (id) => {
     set({ hoveredWindowId: id });
   },
+  desktopViewport: {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  },
+  setDesktopViewport: (viewport) => {
+    set((state) => ({
+      desktopViewport: viewport,
+      windows: state.windows.map((window) => {
+        if (window.maximized) {
+          return {
+            ...window,
+            x: 0,
+            y: 0,
+            width: viewport.width,
+            height: viewport.height,
+          };
+        }
+
+        const maxX = Math.max(0, viewport.width - window.width);
+        const maxY = Math.max(0, viewport.height - window.height);
+
+        const width = Math.min(
+          window.width,
+          window.maxWidth ?? Number.POSITIVE_INFINITY,
+          Math.max(window.minWidth, viewport.width - window.x),
+        );
+
+        const height = Math.min(
+          window.height,
+          window.maxHeight ?? Number.POSITIVE_INFINITY,
+          Math.max(window.minHeight, viewport.height - window.y),
+        );
+
+        return {
+          ...window,
+          width,
+          height,
+          x: Math.min(Math.max(0, window.x), maxX),
+          y: Math.min(Math.max(0, window.y), maxY),
+        };
+      }),
+    }));
+  },
 
   openWindow: (appId, options) => {
     const app = AppRegistry[appId];
@@ -85,15 +135,43 @@ export const useWindowStore = create<WindowStore>((set) => ({
         };
       }
 
+      const minWidth = app.minWidth ?? 200;
+      const minHeight = app.minHeight ?? 150;
+      const maxWidth = app.maxWidth;
+      const maxHeight = app.maxHeight;
+      const width = Math.min(
+        Math.max(options?.width ?? app.defaultWidth, minWidth),
+        maxWidth ?? Number.POSITIVE_INFINITY,
+      );
+      const height = Math.min(
+        Math.max(options?.height ?? app.defaultHeight, minHeight),
+        maxHeight ?? Number.POSITIVE_INFINITY,
+      );
+      const x =
+        options?.x ?? Math.max(0, (state.desktopViewport.width - width) / 2);
+      const y =
+        options?.y ?? Math.max(0, (state.desktopViewport.height - height) / 2);
+
       const newWindow: WindowData = {
         id: app.id,
         appId: app.id,
         title: app.title,
         component: app.component,
-        x: options?.x ?? 100,
-        y: options?.y ?? 100,
-        width: options?.width ?? app.defaultWidth,
-        height: options?.height ?? app.defaultHeight,
+        x: Math.min(
+          Math.max(0, x),
+          Math.max(0, state.desktopViewport.width - width),
+        ),
+        y: Math.min(
+          Math.max(0, y),
+          Math.max(0, state.desktopViewport.height - height),
+        ),
+        width,
+        height,
+        minWidth,
+        minHeight,
+        maxWidth,
+        maxHeight,
+        resizable: app.resizable !== false,
         zIndex: state.nextZIndex,
         minimized: false,
         maximized: false,
@@ -107,6 +185,10 @@ export const useWindowStore = create<WindowStore>((set) => ({
   },
 
   closeWindow: (id) => {
+    if (id === "welcome") {
+      localStorage.setItem(welcomeAppDismissedKey, "true");
+    }
+
     set((state) => ({
       windows: state.windows.filter((window) => window.id !== id),
     }));
@@ -190,23 +272,62 @@ export const useWindowStore = create<WindowStore>((set) => ({
 
   moveWindow: (id, position) => {
     set((state) => ({
-      windows: state.windows.map((window) =>
-        window.id === id ? { ...window, x: position.x, y: position.y } : window,
-      ),
+      windows: state.windows.map((window) => {
+        if (window.id !== id || window.maximized) {
+          return window;
+        }
+
+        const maxX = Math.max(0, state.desktopViewport.width - window.width);
+        const maxY = Math.max(0, state.desktopViewport.height - window.height);
+
+        return {
+          ...window,
+          x: Math.min(Math.max(0, position.x), maxX),
+          y: Math.min(Math.max(0, position.y), maxY),
+        };
+      }),
     }));
   },
 
   resizeWindow: (id, size) => {
     set((state) => ({
-      windows: state.windows.map((window) =>
-        window.id === id
-          ? {
-              ...window,
-              width: Math.max(200, size.width),
-              height: Math.max(150, size.height),
-            }
-          : window,
-      ),
+      windows: state.windows.map((window) => {
+        if (window.id !== id || window.maximized || !window.resizable) {
+          return window;
+        }
+
+        const desktopMaxWidth = Math.max(
+          window.minWidth,
+          state.desktopViewport.width - window.x,
+        );
+
+        const desktopMaxHeight = Math.max(
+          window.minHeight,
+          state.desktopViewport.height - window.y,
+        );
+
+        const allowedMaxWidth = Math.min(
+          desktopMaxWidth,
+          window.maxWidth ?? Number.POSITIVE_INFINITY,
+        );
+
+        const allowedMaxHeight = Math.min(
+          desktopMaxHeight,
+          window.maxHeight ?? Number.POSITIVE_INFINITY,
+        );
+
+        return {
+          ...window,
+          width: Math.min(
+            Math.max(window.minWidth, size.width),
+            allowedMaxWidth,
+          ),
+          height: Math.min(
+            Math.max(window.minHeight, size.height),
+            allowedMaxHeight,
+          ),
+        };
+      }),
     }));
   },
 }));

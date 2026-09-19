@@ -6,7 +6,7 @@ interface Props {
 function Welcome({ width, height }: Props) {
   return (
     <div
-      className="bg-purple-200/50"
+      className=""
       style={{
         width,
         height,

@@ -127,7 +127,7 @@ function Calculator() {
   }, [handleDigit, handleOp, handleEquals, handleDelete, handleClear]);
 
   return (
-    <div className="w-full h-full bg-purple-200/50 text-zinc-100 select-none flex flex-col p-4 justify-between">
+    <div className="w-full h-full text-zinc-100 select-none flex flex-col p-4 justify-between">
       <div className="p-4 rounded-xl bg-zinc-900 flex flex-col justify-end text-right min-h-24 mb-4">
         <div className="text-xs text-zinc-500 min-h-4 overflow-x-auto whitespace-nowrap scrollbar-none">
           {expr}

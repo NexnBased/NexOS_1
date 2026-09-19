@@ -12,6 +12,11 @@ export interface WindowData {
   y: number;
   width: number;
   height: number;
+  minWidth: number;
+  minHeight: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  resizable: boolean;
   zIndex: number;
   minimized: boolean;
   maximized: boolean;

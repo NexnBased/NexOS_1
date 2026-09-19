@@ -5,16 +5,21 @@ import Dock from "../Dock";
 import DesktopIcon from "./DesktopIcon";
 import WindowManager from "./WindowManager";
 import AppLauncher from "./AppLauncher";
-import { useUIStore } from "../../stores/UIStore";
 import DesktopContextMenu from "./DesktopContextMenu";
+
+import { useUIStore } from "../../stores/UIStore";
+import { useWindowStore } from "../../stores/WindowStore";
 
 function Desktop() {
   const desktopRef = useRef<HTMLElement>(null);
-
   const [viewport, setViewport] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
+  const setDesktopViewport = useWindowStore(
+    (state) => state.setDesktopViewport,
+  );
+  const openWindow = useWindowStore((state) => state.openWindow);
 
   useEffect(() => {
     const element = desktopRef.current;
@@ -23,10 +28,13 @@ function Desktop() {
     }
 
     const updateSize = () => {
-      setViewport({
+      const nextViewport = {
         width: element.clientWidth,
         height: element.clientHeight,
-      });
+      };
+
+      setViewport(nextViewport);
+      setDesktopViewport(nextViewport);
     };
 
     updateSize();
@@ -36,7 +44,7 @@ function Desktop() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [setDesktopViewport]);
 
   const desktopApps = useMemo(() => {
     return Object.values(AppRegistry).filter(
@@ -73,6 +81,13 @@ function Desktop() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [closeContextMenu]);
+
+  useEffect(() => {
+    const welcomeWasDismissed = localStorage.getItem("nexos.welcome-dismissed") === "true";
+    if (!welcomeWasDismissed) {
+      openWindow("welcome");
+    }
+  }, [openWindow]);
 
   const wallpaperUrl =
     "https://images8.alphacoders.com/136/thumb-1920-1363709.png";

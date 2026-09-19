@@ -1,9 +1,22 @@
-import { Grid2X2, Monitor, RefreshCw } from "lucide-react";
+import { Grid2X2, RefreshCw } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { useUIStore } from "../../stores/UIStore";
-import React, { useRef, useState, useEffect } from "react";
 
 interface Props {
-  desktopRef: React.RefObject<HTMLElement | null>;
+  desktopRef: RefObject<HTMLElement | null>;
+}
+
+interface MenuPosition {
+  x: number;
+  y: number;
 }
 
 function DesktopContextMenu({ desktopRef }: Props) {
@@ -12,89 +25,211 @@ function DesktopContextMenu({ desktopRef }: Props) {
   const contextMenuPosition = useUIStore((state) => state.contextMenuPosition);
   const closeContextMenu = useUIStore((state) => state.closeContextMenu);
   const openLauncher = useUIStore((state) => state.openLauncher);
-
-  const [position, setPosition] = useState({
-    x: contextMenuPosition.x,
-    y: contextMenuPosition.y,
-  });
-
-  useEffect(() => {
+  const [position, setPosition] = useState<MenuPosition>(contextMenuPosition);
+  const [ready, setReady] = useState(false);
+  const updatePosition = () => {
     const menu = menuRef.current;
     const desktop = desktopRef.current;
+
     if (!menu || !desktop) {
       return;
     }
+
     const desktopRect = desktop.getBoundingClientRect();
-    const menuWidth = menu.offsetWidth;
-    const menuHeight = menu.offsetHeight;
-    const padding = 8;
-    const maxX = desktopRect.width - menuWidth - padding;
-    const maxY = desktopRect.height - menuHeight - padding;
+    const menuRect = menu.getBoundingClientRect();
+    const padding = 6;
+    const maxX = Math.max(padding, desktopRect.width - menuRect.width - padding);
+    const maxY = Math.max(padding, desktopRect.height - menuRect.height - padding);
 
     setPosition({
       x: Math.min(Math.max(contextMenuPosition.x, padding), maxX),
       y: Math.min(Math.max(contextMenuPosition.y, padding), maxY),
     });
-  }, [contextMenuPosition, desktopRef]);
 
-  if (!contextMenuOpen) {
-    return null;
-  }
+    setReady(true);
+  };
 
-  const handleOpenLauncher = () => {
+  useLayoutEffect(() => {
+    if (!contextMenuOpen) {
+      setReady(false);
+      return;
+    }
+
+    const frame = requestAnimationFrame(updatePosition);
+    const desktop = desktopRef.current;
+
+    if (!desktop) {
+      return () => cancelAnimationFrame(frame);
+    }
+
+    const resizeObserver = new ResizeObserver(updatePosition);
+    resizeObserver.observe(desktop);
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [
+    contextMenuOpen,
+    contextMenuPosition,
+    desktopRef,
+  ]);
+
+  const handleOpenApplications = () => {
     closeContextMenu();
     openLauncher();
   };
+
   const handleRefresh = () => {
     closeContextMenu();
+    window.location.reload();
+  };
+
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+  ) => {
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>(
+        '[role="menuitem"]',
+      ) ?? [],
+    );
+
+    const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement,);
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeContextMenu();
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      const nextIndex =
+        currentIndex >= items.length - 1
+          ? 0
+          : currentIndex + 1;
+
+      items[nextIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      const previousIndex =
+        currentIndex <= 0
+          ? items.length - 1
+          : currentIndex - 1;
+
+      items[previousIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      items[0]?.focus();
+      return;
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      items[items.length - 1]?.focus();
+    }
   };
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-8000">
-      <div
-        ref={menuRef}
-        data-desktop-context-menu
-        className="pointer-events-auto absolute w-50 overflow-hidden rounded-xl bg-black/45 p-1 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100"
-        style={{
-          left: position.x,
-          top: position.y,
-        }}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleOpenLauncher}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-white/10 focus:outline-none focus-visible:bg-white/10"
+    <AnimatePresence>
+      {contextMenuOpen && (
+        <div
+          className="pointer-events-none absolute inset-0 z-8000"
+          onContextMenu={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
         >
-          <Grid2X2 size={17} strokeWidth={1.8} className="text-white/75" />
-          <span>Open Applications</span>
-        </button>
+          <motion.div
+            ref={menuRef}
+            data-desktop-context-menu
+            role="menu"
+            tabIndex={-1}
+            aria-label="Desktop context menu"
+            initial={{
+              opacity: 0,
+              scale: 0.96,
+              y: -3,
+            }}
+            animate={{
+              opacity: ready ? 1 : 0,
+              scale: ready ? 1 : 0.96,
+              y: ready ? 0 : -3,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.96,
+              y: -3,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 560,
+              damping: 36,
+              mass: 0.4,
+              opacity: {
+                duration: 0.1,
+              },
+            }}
+            onKeyDown={handleKeyDown}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            style={{
+              left: position.x,
+              top: position.y,
+              transformOrigin: "top left",
+            }}
+            className="pointer-events-auto absolute flex w-44 flex-col gap-0.5 rounded-md bg-purple-200/90 p-1 backdrop-blur-xl"
+          >
+            <ContextMenuItem
+              icon={<Grid2X2 size={15} strokeWidth={3} />}
+              label="Open Applications"
+              onClick={handleOpenApplications}
+            />
+            <ContextMenuItem
+              icon={<RefreshCw size={15} strokeWidth={3} />}
+              label="Refresh"
+              onClick={handleRefresh}
+            />
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
 
-        <button
-          type="button"
-          onClick={handleRefresh}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white transition hover:bg-white/10 focus:outline-none focus-visible:bg-white/10"
-        >
-          <RefreshCw size={17} strokeWidth={1.8} className="text-white/75" />
-          <span>Refresh</span>
-        </button>
+interface ItemProps {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+}
 
-        <div className="my-1 h-px bg-white/10" />
-
-        <button
-          type="button"
-          disabled
-          title="Display settings are not implemented yet"
-          className="flex w-full cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-white/35"
-        >
-          <Monitor size={17} strokeWidth={1.8} />
-          <span>Display Settings</span>
-        </button>
-      </div>
-    </div>
+function ContextMenuItem({
+  icon,
+  label,
+  onClick,
+}: ItemProps) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className="flex w-full items-center gap-2 rounded-md! px-2 py-1.5 text-left text-xs font-medium text-purple-500 transition-colors duration-150 hover:bg-purple-400 hover:text-purple-950 focus:bg-purple-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-purple-400 active:bg-purple-200"
+    >
+      <span className="flex size-4 shrink-0 items-center justify-center text-purple-600">{icon}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+    </button>
   );
 }
 

@@ -1,8 +1,10 @@
 import type { ComponentType } from "react";
-import Welcome from "../components/apps/Welcome";
-import Calculator from "../components/apps/Calculator";
+
 import Notes from "../components/apps/Notes";
 import Files from "../components/apps/Files";
+import Welcome from "../components/apps/Welcome";
+import Calendar from "../components/apps/Calendar";
+import Calculator from "../components/apps/Calculator";
 
 export interface AppProps {
   width: number;
@@ -17,6 +19,9 @@ export interface AppDefinition {
   defaultHeight: number;
   minWidth?: number;
   minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  resizable?: boolean;
   icon?: string;
   showInLauncher?: boolean;
   showOnDesktop?: boolean;
@@ -28,14 +33,27 @@ export const AppRegistry: Record<string, AppDefinition> = {
     id: "welcome",
     title: "Welcome",
     component: Welcome,
-    defaultWidth: 400,
-    defaultHeight: 150,
+    defaultWidth: 500,
+    defaultHeight: 250,
     minWidth: 400,
     minHeight: 150,
-    icon: "https://i.pinimg.com/1200x/48/49/ac/4849aca80f124fcec6d446e159449b58.jpg",
+    icon: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Apple_Home_%28iOS%29.png",
     showInLauncher: false,
     showOnDesktop: true,
     showInDock: false,
+  },
+  files: {
+    id: "files",
+    title: "Files",
+    component: Files,
+    defaultWidth: 800,
+    defaultHeight: 500,
+    minWidth: 700,
+    minHeight: 450,
+    icon: "https://upload.wikimedia.org/wikipedia/commons/d/d6/Files_App_icon_iOS.png",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: true,
   },
   calculator: {
     id: "calculator",
@@ -45,7 +63,8 @@ export const AppRegistry: Record<string, AppDefinition> = {
     defaultHeight: 500,
     minWidth: 350,
     minHeight: 500,
-    icon: "https://i.pinimg.com/736x/88/8d/3f/888d3fb1d57bd69f2c52fb89d5abf7e7.jpg",
+    resizable: false,
+    icon: "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Calculator_Icon_%28macOS_27%29.png/960px-Calculator_Icon_%28macOS_27%29.png",
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: true,
@@ -58,22 +77,23 @@ export const AppRegistry: Record<string, AppDefinition> = {
     defaultHeight: 500,
     minWidth: 800,
     minHeight: 500,
-    icon: "https://i.pinimg.com/736x/8c/de/74/8cde744c0bca6d1cf6c0dde004548451.jpg",
+    icon: "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Notes_%28iOS_26%29_app_icon.png/960px-Notes_%28iOS_26%29_app_icon.png",
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: true,
   },
-  files: {
-    id: "files",
-    title: "Files",
-    component: Files,
-    defaultWidth: 800,
-    defaultHeight: 500,
-    minWidth: 500,
-    minHeight: 350,
-    icon: "https://i.pinimg.com/736x/95/13/dd/9513dd6721787751f30ec543236487fc.jpg",
+  calendar: {
+    id: "calendar",
+    title: "Calendar",
+    component: Calendar,
+    defaultWidth: 300,
+    defaultHeight: 390,
+    minWidth: 300,
+    minHeight: 390,
+    resizable: false,
+    icon: "https://play-lh.googleusercontent.com/vEoqLbT_QkYcEaawWBRc22N6i98OUtOUpM1LmKdVs_xx7lCsUyFfV0ZiqoUXjMijUteiBhhN4K5MpoF96FRNOg=w480-h960-rw",
     showInLauncher: true,
     showOnDesktop: true,
-    showInDock: true,
-  },
+    showInDock: false,
+  }
 };

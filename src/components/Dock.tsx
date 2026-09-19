@@ -13,8 +13,11 @@ function Dock() {
   const [bottomReveal, setBottomReveal] = useState(false);
   const [dockHovered, setDockHovered] = useState(false);
   const apps = useMemo(() => {
-    return Object.values(AppRegistry).filter((app) => app.showInDock !== false);
-  }, []);
+    const registeredApps = Object.values(AppRegistry);
+    const runningAppIds = new Set(windows.map((window) => window.appId));
+
+    return registeredApps.filter((app) => app.showInDock !== false || runningAppIds.has(app.id));
+  }, [windows]);
 
   const maximizedWindow = windows.some(
     (window) => window.maximized && !window.minimized,
@@ -38,10 +41,9 @@ function Dock() {
     };
   }, []);
 
-  const shouldHide =
-    launcherOpen ||
-    maximizedWindow ||
-    (isWindowHovered && !dockHovered && !bottomReveal);
+  const hasVisibleWindows = windows.some((window) => !window.minimized);
+  const allWindowMinimized = windows.length > 0 && !hasVisibleWindows;
+  const shouldHide = !allWindowMinimized && (launcherOpen || maximizedWindow || (isWindowHovered && !dockHovered && !bottomReveal));
 
   return (
     <nav

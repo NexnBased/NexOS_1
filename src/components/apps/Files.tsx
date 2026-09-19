@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "motion/react"
 import { useRef, useMemo, useState, useEffect } from "react";
 import {
   ArchiveIcon,
@@ -189,21 +190,7 @@ function Files({ width: _width, height: _height }: Props) {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showCreateMenu, setShowCreateMenu] = useState(false);
-
-  const rootRef = useRef<HTMLDivElement>(null);
   const renameRef = useRef<HTMLInputElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    if (!rootRef.current) return;
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect;
-      setContainerSize({ width, height });
-    });
-    observer.observe(rootRef.current);
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     saveItems(items);
@@ -217,8 +204,6 @@ function Files({ width: _width, height: _height }: Props) {
     }
   }, [renameId]);
 
-  const tiny = containerSize.width < 430;
-  const compact = containerSize.width < 650;
   const currentFolder = items.find((item) => item.id === currentId);
   const currentItems = useMemo(() => {
     const children = items.filter((item) => item.parentId === currentId);
@@ -397,23 +382,17 @@ function Files({ width: _width, height: _height }: Props) {
 
   return (
     <div
-      ref={rootRef}
       className="relative flex h-full w-full min-h-0 min-w-0 overflow-hidden"
       onClick={handleBackgroundClick}
     >
       <aside
-        className={[
-          "shrink-0 bg-purple-200/50",
-          tiny ? "w-13" : compact ? "w-14.5" : "w-47.5",
-        ].join(" ")}
+        className="shrink-0 w-48"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex h-full min-h-0 flex-col p-2">
-          {!compact && (
-            <div className="px-3 pb-3 pt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-900">
-              Places
-            </div>
-          )}
+          <div className="px-3 pb-3 pt-2 text-xs font-semibold uppercase tracking-wide text-zinc-900">
+            Places
+          </div>
           <div className="flex min-h-0 flex-1 flex-col gap-1">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
@@ -425,20 +404,19 @@ function Files({ width: _width, height: _height }: Props) {
                   onClick={() => navigate(item.id)}
                   title={item.name}
                   className={[
-                    "flex h-9 w-full shrink-0 items-center rounded-full! text-left text-sm transition",
-                    compact ? "justify-center px-0" : "gap-3 px-3",
+                    "flex h-9 w-full shrink-0 items-center rounded-md! text-left text-sm transition gap-3 px-3",
                     active
                       ? "bg-zinc-900/10 text-zinc-950"
                       : "text-zinc-900/55 hover:bg-zinc-800/20 hover:text-zinc-300",
                   ].join(" ")}
                 >
                   <Icon size={17} strokeWidth={1.8} />
-                  {!compact && (<span className="min-w-0 truncate">{item.name}</span>)}
+                  <span className="min-w-0 truncate">{item.name}</span>
                 </button>
               );
             })}
           </div>
-          <div className="w-full flex flex-col gap-2 items-center justify-center">
+          <div className="w-full flex flex-col gap-1 items-center justify-center">
             <div className="w-full relative shrink-0">
               <button
                 type="button"
@@ -447,63 +425,73 @@ function Files({ width: _width, height: _height }: Props) {
                   setShowCreateMenu((value) => !value);
                 }}
                 title="New"
-                className={`flex h-8 w-full items-center justify-start p-1.5 gap-2 rounded-full! text-white/55 transition bg-zinc-900 hover:bg-zinc-600 hover:text-white ${showCreateMenu == true && "bg-white/[0.07] text-white"}`}
+                className={`flex h-8 w-full items-center justify-start p-1.5 gap-2 rounded-md! text-white/55 transition bg-zinc-900 hover:bg-zinc-600 hover:text-white ${showCreateMenu == true && "bg-white/[0.07] text-white"}`}
               >
                 <PlusIcon size={17} /> Create
               </button>
-              {showCreateMenu && (
-                <div
-                  className="absolute bottom-10 z-30 w-40 overflow-hidden rounded-xl border border-white/10 bg-[#1b1922] p-1.5"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={createFolder}
-                    className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs text-white/70 hover:bg-white/[0.07] hover:text-white"
+              <AnimatePresence>
+                {showCreateMenu && (
+                  <motion.div
+                    className="absolute bottom-10 z-30 w-40 overflow-hidden rounded-xl border border-white/10 bg-[#1b1922] p-1.5"
+                    onClick={(event) => event.stopPropagation()}
+                    initial={{ y: "100%", opacity: 0, scale: 0 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: "100%", opacity: 0, scale: 0 }}
+                    transition={{
+                      opacity: { duration: 0.15 },
+                      y: { type: "spring", stiffness: 300, damping: 25 },
+                      scale: { type: "spring", stiffness: 300, damping: 25 },
+                    }}
                   >
-                    <FolderIcon size={15} /> New Folder
-                  </button>
-                  <button
-                    type="button"
-                    onClick={createTextFile}
-                    className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs text-white/70 hover:bg-white/[0.07] hover:text-white"
-                  >
-                    <FileTextIcon size={15} /> Text File
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={createFolder}
+                      className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs text-white/70 hover:bg-white/[0.07] hover:text-white"
+                    >
+                      <FolderIcon size={15} /> New Folder
+                    </button>
+                    <button
+                      type="button"
+                      onClick={createTextFile}
+                      className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs text-white/70 hover:bg-white/[0.07] hover:text-white"
+                    >
+                      <FileTextIcon size={15} /> Text File
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <div className={["flex h-8 p-2 shrink-0 items-center rounded-full! bg-zinc-900", tiny ? "w-8" : "w-full"].join(" ")}>
+            <div className="flex h-8 p-2 shrink-0 items-center rounded-md! bg-zinc-900 w-full">
               <SearchIcon size={15} className="shrink-0 text-white/30" />
-              {!tiny && (
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search"
-                  className="h-full min-w-0 flex-1 bg-transparent px-2 text-xs text-white outline-none placeholder:text-white/25 placeholder:text-[14px]"
-                />
-              )}
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search"
+                className="h-full min-w-0 flex-1 bg-transparent px-2 text-xs text-white outline-none placeholder:text-white/25 placeholder:text-[14px]"
+              />
             </div>
           </div>
         </div>
       </aside>
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-1">
         <header
-          className="flex h-11 shrink-0 items-center gap-1 border-b border-white/[0.07] bg-[#141219] px-2"
+          className="flex h-11 shrink-0 items-center gap-1 border-b border-white/7 bg-zinc-900 px-2 rounded-t-md"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex min-w-0 flex-1 items-center overflow-hidden">
             <div className="flex min-w-0 items-center overflow-x-auto scrollbar-none">
               {breadcrumps.map((item, index) => (
                 <div key={item.id} className="flex shrink-0 items-center">
-                  {index > 0 && (<ChevronRightIcon size={13} className="mx-1 shrink-0 text-white/20" />)}
+                  {index > 0 && (
+                    <ChevronRightIcon size={13} className="mx-1 shrink-0 text-white/20" />
+                  )}
                   <button
                     type="button"
                     onClick={() => navigate(item.id)}
                     className={[
-                      "max-w-35 truncate rounded-md px-2 py-1 text-xs transition",
+                      "max-w-35 truncate rounded-md! px-2 py-1 text-xs transition",
                       item.id === currentId
-                        ? "bg-white/6 text-white/80"
+                        ? "bg-white/15 text-white/80"
                         : "text-white/40 hover:bg-white/5 hover:text-white/70",
                     ].join(" ")}
                   >
@@ -513,10 +501,9 @@ function Files({ width: _width, height: _height }: Props) {
               ))}
             </div>
           </div>
-
         </header>
         <section
-          className="relative min-h-0 min-w-0 flex-1 overflow-auto bg-[#111016]"
+          className="relative min-h-0 min-w-0 flex-1 overflow-auto bg-zinc-950 rounded-b-md"
           onClick={handleBackgroundClick}
         >
           {currentItems.length === 0 ? (
@@ -527,9 +514,7 @@ function Files({ width: _width, height: _height }: Props) {
                 </div>
                 <p className="text-sm text-white/45">{search ? "No matching files" : "This folder is empty"}</p>
                 <p className="mt-1 text-xs text-white/20">
-                  {search
-                    ? "Try a different search."
-                    : "Create a folder or file."}
+                  {search ? "Try a different search." : "Create a folder or file."}
                 </p>
               </div>
             </div>
@@ -604,7 +589,7 @@ function Files({ width: _width, height: _height }: Props) {
                         </div>
                       )}
                     </div>
-                    {selected && !renaming && !tiny && (
+                    {selected && !renaming && (
                       <div className="mt-1 flex items-center gap-1">
                         <button
                           type="button"
@@ -641,7 +626,8 @@ function Files({ width: _width, height: _height }: Props) {
                   </div>
                 );
               })}
-            </div>)}
+            </div>
+          )}
         </section>
       </main>
       {previewItem && (
@@ -669,7 +655,9 @@ function Files({ width: _width, height: _height }: Props) {
             <div className="min-h-0 overflow-auto p-4">
               {previewItem.fileType === "text" ||
                 previewItem.fileType === "code" ? (
-                <pre className="whitespace-pre-wrap wrap-break-words rounded-xl bg-black/20 p-4 text-xs leading-6 text-white/65">{previewItem.content || "Empty file"}</pre>
+                <pre className="whitespace-pre-wrap wrap-break-words rounded-xl bg-black/20 p-4 text-xs leading-6 text-white/65">
+                  {previewItem.content || "Empty file"}
+                </pre>
               ) : previewItem.fileType === "image" ? (
                 <div className="flex min-h-45 items-center justify-center rounded-xl bg-black/20 p-6">
                   <div className="flex flex-col items-center gap-2 text-white/25">
@@ -682,7 +670,9 @@ function Files({ width: _width, height: _height }: Props) {
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 text-white/35">
                     <MusicIcon size={28} />
                   </div>
-                  <span className="text-xs text-white/40">Audio preview unavailable</span>
+                  <span className="text-xs text-white/40">
+                    Audio preview unavailable
+                  </span>
                 </div>
               ) : previewItem.fileType === "video" ? (
                 <div className="flex min-h-45 items-center justify-center rounded-xl bg-black/20">

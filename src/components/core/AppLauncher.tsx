@@ -131,7 +131,7 @@ function AppLauncher() {
   return (
     <div className="absolute inset-0 z-9000 flex flex-col bg-black/35 backdrop-blur-xl animate-in fade-in duration-200">
       <div className="flex justify-center pt-12">
-        <div className="relative w-full max-w-xl px-4">
+        <div className="relative w-full max-w-sm px-4">
           <Search
             size={20}
             className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-white/60"
@@ -145,7 +145,7 @@ function AppLauncher() {
               setSelectedIndex(0);
             }}
             type="text"
-            placeholder="Search applications..."
+            placeholder="Search Applications"
             className="h-12 w-full rounded-2xl bg-white/10 px-12 pr-12 text-white placeholder:text-white/50 shadow-2xl outline-none backdrop-blur-xl focus:border-white/30 focus:bg-white/15"
           />
 
@@ -153,7 +153,7 @@ function AppLauncher() {
             type="button"
             onClick={closeLauncher}
             aria-label="Close application launcher"
-            className="absolute right-7 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="absolute right-7 top-1/2 -translate-y-1/2 rounded-full! p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             <X size={18} />
           </button>

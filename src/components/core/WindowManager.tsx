@@ -1,4 +1,5 @@
 import Window from "./Window";
+import { AnimatePresence } from "motion/react";
 import { useWindowStore } from "../../stores/WindowStore";
 
 interface Props {
@@ -19,23 +20,25 @@ function WindowManager({ viewport }: Props) {
   const setHoveredWindow = useWindowStore((state) => state.setHoveredWindow);
 
   return (
-    <>
-      {windows.map((window) => (
-        <Window
-          key={window.id}
-          window={window}
-          viewport={viewport}
-          onClose={() => closeWindow(window.id)}
-          onMinimize={() => minimizeWindow(window.id)}
-          onMaximize={() => maximizeWindow(window.id, viewport)}
-          onFocus={focusWindow}
-          onMove={(position) => moveWindow(window.id, position)}
-          onResize={(size) => resizeWindow(window.id, size)}
-          onPointerEnter={() => setHoveredWindow(window.id)}
-          onPointerLeave={() => setHoveredWindow(null)}
-        />
-      ))}
-    </>
+    <AnimatePresence mode="sync">
+      {windows
+        .filter((window) => !window.minimized)
+        .map((window) => (
+          <Window
+            key={window.id}
+            window={window}
+            viewport={viewport}
+            onClose={() => closeWindow(window.id)}
+            onMinimize={() => minimizeWindow(window.id)}
+            onMaximize={() => maximizeWindow(window.id, viewport)}
+            onFocus={focusWindow}
+            onMove={(position) => moveWindow(window.id, position)}
+            onResize={(size) => resizeWindow(window.id, size)}
+            onPointerEnter={() => setHoveredWindow(window.id)}
+            onPointerLeave={() => setHoveredWindow(null)}
+          />
+        ))}
+    </AnimatePresence>
   );
 }
 

@@ -21,7 +21,7 @@ function AppLauncherItem({ app, selected, onClick }: Props) {
             src={app.icon}
             alt=""
             draggable={false}
-            className="size-full object-contain"
+            className="size-full object-contain rounded-md"
           />
         ) : (
           <div className="size-full rounded-2xl bg-white/20" />

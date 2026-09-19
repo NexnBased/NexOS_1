@@ -17,7 +17,7 @@ function Notes() {
     try {
       const saved = localStorage.getItem(StorageKey);
       if (saved) return JSON.parse(saved);
-    } catch {}
+    } catch { }
     return [
       {
         id: "1",
@@ -67,24 +67,25 @@ function Notes() {
   };
 
   return (
-    <div className="w-full h-full flex select-none overflow-hidden bg-purple-200/50">
+    <div className="w-full h-full flex select-none overflow-hidden">
       <div className="w-48 flex flex-col shrink-0">
         <div className="p-2 flex items-center justify-between">
           <button
             onClick={addNote}
             disabled={notes.length >= MaxNotes}
-            className={`w-full py-1 px-2 text-[11px] font-medium rounded-md! transition-colors ${
-              notes.length >= MaxNotes
-                ? "bg-zinc-800/40 cursor-not-allowed"
-                : "bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white"
-            }`}
+            className={`w-full py-1 px-2 text-[11px] font-medium rounded-md! transition-colors ${notes.length >= MaxNotes
+              ? "bg-zinc-800/40 cursor-not-allowed"
+              : "bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white"
+              }`}
           >
             New Note
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
           {notes.length === 0 ? (
-            <div className="p-4 text-center text-[10px] text-purple-950">Empty!</div>
+            <div className="p-4 text-center text-[10px] text-purple-950">
+              Empty!
+            </div>
           ) : (
             notes.map((note) => {
               const active = note.id === activeId;
@@ -92,14 +93,15 @@ function Notes() {
                 <div
                   key={note.id}
                   onClick={() => setActiveId(note.id)}
-                  className={`group relative p-2 rounded-md cursor-pointer transition-colors flex flex-col gap-0.5 ${
-                    active
-                      ? "bg-purple-200/50 text-black/80"
-                      : "hover:bg-purple-200/20 text-black/40 hover:text-black/80"
-                  }`}
+                  className={`group relative p-2 rounded-md cursor-pointer transition-colors flex flex-col gap-0.5 ${active
+                    ? "bg-purple-200/50 text-black/80"
+                    : "hover:bg-purple-200/20 text-black/40 hover:text-black/80"
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-[11px] font-bold tracking-tight truncate flex-1">{note.title.trim() || "Untitled"}</span>
+                    <span className="text-[11px] font-bold tracking-tight truncate flex-1">
+                      {note.title.trim() || "Untitled"}
+                    </span>
                     <button
                       onClick={(e) => deleteNote(note.id, e)}
                       className="opacity-0 group-hover:opacity-100 text-black/50 hover:text-rose-400 transition-opacity"
@@ -107,7 +109,9 @@ function Notes() {
                       <Trash2Icon className="size-3" strokeWidth={3} />
                     </button>
                   </div>
-                  <div className="text-[10px] text-zinc-500 truncate opacity-70 font-mono">{note.content || "Empty note"}</div>
+                  <div className="text-[10px] text-zinc-500 truncate opacity-70 font-mono">
+                    {note.content || "Empty note"}
+                  </div>
                 </div>
               );
             })
@@ -145,9 +149,11 @@ function Notes() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-white/60 gap-2">
             <FileTextIcon className="size-6 text-white/70" />
-            {notes.length === 0 ?
-            <span className="text-xs text-white/60">Create a new Note</span>
-          : <span className="text-xs text-white/60">No note selected</span>}
+            {notes.length === 0 ? (
+              <span className="text-xs text-white/60">Create a new Note</span>
+            ) : (
+              <span className="text-xs text-white/60">No note selected</span>
+            )}
           </div>
         )}
       </div>
