@@ -60,12 +60,13 @@ function Calendar() {
               <button
                 key={index}
                 onClick={() => setSelectedDate(date)}
-                className={`flex size-8 items-center justify-center rounded-md text-sm transition-colors sm:size-10 ${isSelected
-                  ? "bg-purple-600 font-normal text-white"
-                  : isToday
-                    ? "bg-purple-500/90 font-bold text-purple-50"
-                    : "text-zinc-600 hover:bg-zinc-900 hover:text-zinc-100"
-                  }`}
+                className={`flex size-8 items-center justify-center rounded-md text-sm transition-colors sm:size-10 ${
+                  isSelected
+                    ? "bg-purple-600 font-normal text-white"
+                    : isToday
+                      ? "bg-purple-500/90 font-bold text-purple-50"
+                      : "text-zinc-600 hover:bg-zinc-900 hover:text-zinc-100"
+                }`}
               >
                 {date.date()}
               </button>
@@ -74,7 +75,7 @@ function Calendar() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default Calendar;

@@ -182,6 +182,7 @@ function Window({
         <App
           width={viewport?.width ?? window.width}
           height={viewport?.height ?? window.height}
+          fileId={window.fileId}
         />
       </div>
 

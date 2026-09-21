@@ -1,8 +1,17 @@
 import { create } from "zustand";
-import type { FSItem } from "../types/filesystem";
+import {
+  type FSItem,
+  type FSMimeType,
+  FSStorageKey as StorageKey,
+  RootID,
+  TrashID,
+} from "../types/filesystem";
 
-const StorageKey = "nexos.fs";
-const RootID = "root";
+const StorageVersion = 1;
+interface PersistedFS {
+  version: number;
+  items: FSItem[];
+}
 
 interface FileSystemStore {
   items: FSItem[];
@@ -11,14 +20,18 @@ interface FileSystemStore {
     name: string,
     parentId: string | null,
     content?: string,
-    mimeType?: string,
+    mimeType?: FSMimeType,
   ) => string;
   getItem: (id: string) => FSItem | undefined;
   getChildren: (parentId: string | null) => FSItem[];
+  getPath: (id: string) => FSItem[];
   renameItem: (id: string, name: string) => void;
   updateFileContent: (id: string, content: string) => void;
   moveItem: (id: string, parentId: string | null) => void;
-  deleteItem: (id: string) => void;
+  moveToTrash: (id: string) => void;
+  restoreItem: (id: string) => void;
+  permanentlyDeleteItem: (id: string) => void;
+  emptyTrash: () => void;
   resetFileSystem: () => void;
 }
 
@@ -37,7 +50,6 @@ const createInitFS = (): FSItem[] => {
       createdAt: now,
       modifiedAt: now,
     },
-
     {
       id: "desktop",
       name: "Desktop",
@@ -46,7 +58,6 @@ const createInitFS = (): FSItem[] => {
       createdAt: now,
       modifiedAt: now,
     },
-
     {
       id: "documents",
       name: "Documents",
@@ -55,7 +66,6 @@ const createInitFS = (): FSItem[] => {
       createdAt: now,
       modifiedAt: now,
     },
-
     {
       id: "downloads",
       name: "Downloads",
@@ -64,7 +74,6 @@ const createInitFS = (): FSItem[] => {
       createdAt: now,
       modifiedAt: now,
     },
-
     {
       id: "pictures",
       name: "Pictures",
@@ -73,7 +82,6 @@ const createInitFS = (): FSItem[] => {
       createdAt: now,
       modifiedAt: now,
     },
-
     {
       id: "music",
       name: "Music",
@@ -82,7 +90,6 @@ const createInitFS = (): FSItem[] => {
       createdAt: now,
       modifiedAt: now,
     },
-
     {
       id: "videos",
       name: "Videos",
@@ -91,33 +98,195 @@ const createInitFS = (): FSItem[] => {
       createdAt: now,
       modifiedAt: now,
     },
+    {
+      id: TrashID,
+      name: "Trash",
+      type: "folder",
+      parentId: null,
+      createdAt: now,
+      modifiedAt: now,
+    },
+    {
+      id: "welcome",
+      name: "welcome.txt",
+      type: "file",
+      parentId: RootID,
+      content:
+        "Welcome to NexOS.\n\nThis is a virtual file stored inside the NexOS filesystem.",
+      mimeType: "text/plain",
+      createdAt: now,
+      modifiedAt: now,
+    },
   ];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null;
+};
+
+const getLegacyMimeType = (fileType: unknown, name: string): FSMimeType => {
+  if (typeof fileType === "string") {
+    switch (fileType) {
+      case "image":
+        return "image/*";
+      case "audio":
+        return "audio/*";
+      case "video":
+        return "video/*";
+      case "code":
+        return "text/typescript";
+      case "text":
+        return "text/plain";
+    }
+  }
+
+  const extension = name.split(".").pop()?.toLowerCase();
+
+  switch (extension) {
+    case "ts":
+    case "tsx":
+      return "text/typescript";
+    case "js":
+    case "jsx":
+      return "text/javascript";
+    case "css":
+      return "text/css";
+    case "md":
+      return "text/markdown";
+    case "jpg":
+    case "jpeg":
+    case "png":
+    case "gif":
+    case "webp":
+      return "image/*";
+    case "mp3":
+    case "wav":
+    case "ogg":
+      return "audio/*";
+    case "mp4":
+    case "webm":
+      return "video/*";
+    default:
+      return "application/octet-stream";
+  }
+};
+
+const isFSMimeType = (value: unknown): value is FSMimeType => {
+  return (
+    typeof value === "string" &&
+    (value === "text/plain" ||
+      value === "text/markdown" ||
+      value === "text/typescript" ||
+      value === "text/javascript" ||
+      value === "text/css" ||
+      value === "image/*" ||
+      value === "audio/*" ||
+      value === "video/*" ||
+      value === "application/octet-stream")
+  );
+};
+
+const normalizeItems = (value: unknown): FSItem[] => {
+  if (!Array.isArray(value)) {
+    return createInitFS();
+  }
+
+  const now = Date.now();
+
+  const items: FSItem[] = value
+    .filter(isRecord)
+    .filter(
+      (item) =>
+        typeof item.id === "string" &&
+        typeof item.name === "string" &&
+        (item.type === "file" || item.type === "folder"),
+    )
+    .map((item) => {
+      const isFile = item.type === "file";
+      const name = item.name as string;
+      const content =
+        typeof item.content === "string" ? item.content : undefined;
+
+      return {
+        id: item.id as string,
+        name,
+        type: item.type as FSItem["type"],
+        parentId:
+          typeof item.parentId === "string" || item.parentId === null
+            ? (item.parentId as string | null)
+            : RootID,
+        content: isFile ? content : undefined,
+        mimeType: isFile
+          ? isFSMimeType(item.mimeType)
+            ? item.mimeType
+            : getLegacyMimeType(item.fileType, name)
+          : undefined,
+        createdAt: typeof item.createdAt === "number" ? item.createdAt : now,
+        modifiedAt: typeof item.modifiedAt === "number" ? item.modifiedAt : now,
+        trashedFrom:
+          typeof item.trashedFrom === "string" || item.trashedFrom === null
+            ? (item.trashedFrom as string | null)
+            : undefined,
+      };
+    });
+
+  const ensureFolder = (id: string, name: string, parentId: string | null) => {
+    if (!items.some((item) => item.id === id)) {
+      items.unshift({
+        id,
+        name,
+        type: "folder",
+        parentId,
+        createdAt: now,
+        modifiedAt: now,
+      });
+    }
+  };
+
+  ensureFolder(RootID, "Home", null);
+  ensureFolder(TrashID, "Trash", null);
+
+  return items;
 };
 
 const loadFS = (): FSItem[] => {
   try {
     const stored = localStorage.getItem(StorageKey);
+
     if (!stored) {
-      return createInitFS();
+      const initialItems = createInitFS();
+      saveFS(initialItems);
+      return initialItems;
     }
+
     const parsed: unknown = JSON.parse(stored);
-    if (!Array.isArray(parsed)) {
-      return createInitFS();
-    }
 
-    return parsed as FSItem[];
+    const rawItems =
+      isRecord(parsed) &&
+      parsed.version === StorageVersion &&
+      Array.isArray(parsed.items)
+        ? parsed.items
+        : parsed;
+
+    const normalizedItems = normalizeItems(rawItems);
+    saveFS(normalizedItems);
+
+    return normalizedItems;
   } catch {
-    return createInitFS();
+    const initialItems = createInitFS();
+    saveFS(initialItems);
+    return initialItems;
   }
 };
 
-const saveFS = (items: FSItem[]) => {
-  try {
-    localStorage.setItem(StorageKey, JSON.stringify(items));
-  } catch (error) {
-    console.error("Failed to save NexOS FS:", error);
-  }
-};
+function saveFS(items: FSItem[]) {
+  const payload: PersistedFS = {
+    version: StorageVersion,
+    items,
+  };
+
+  localStorage.setItem(StorageKey, JSON.stringify(payload));
+}
 
 const normalizeName = (name: string) => {
   return name.trim().toLowerCase();
@@ -155,20 +324,6 @@ const isDescendant = (
   }
 
   return false;
-};
-
-const getDescendantIds = (items: FSItem[], parentId: string): string[] => {
-  const children = items.filter((item) => item.parentId === parentId);
-  const ids: string[] = [];
-
-  for (const child of children) {
-    ids.push(child.id);
-    if (child.type === "folder") {
-      ids.push(...getDescendantIds(items, child.id));
-    }
-  }
-
-  return ids;
 };
 
 export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
@@ -211,6 +366,7 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     if (!trimmedName) {
       throw new Error("File name cannot be empty");
     }
+
     const state = get();
     if (
       parentId !== null &&
@@ -220,9 +376,11 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     ) {
       throw new Error("Parent folder does not exist");
     }
+
     if (hasDuplicateName(state.items, trimmedName, parentId)) {
       throw new Error("An item with that name already exists");
     }
+
     const now = Date.now();
     const newFile: FSItem = {
       id: generateId(),
@@ -234,9 +392,11 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
       createdAt: now,
       modifiedAt: now,
     };
+
     const items = [...state.items, newFile];
     saveFS(items);
     set({ items });
+
     return newFile.id;
   },
   getItem: (id) => {
@@ -252,6 +412,19 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
 
         return a.name.localeCompare(b.name);
       });
+  },
+  getPath: (id) => {
+    const state = get();
+    const path: FSItem[] = [];
+    let current = state.items.find((item) => item.id === id);
+
+    while (current) {
+      path.unshift(current);
+      if (current.parentId === null) break;
+      current = state.items.find((item) => item.id === current?.parentId);
+    }
+
+    return path;
   },
   renameItem: (id, name) => {
     const trimmedName = name.trim();
@@ -355,11 +528,9 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     );
 
     saveFS(items);
-
     set({ items });
   },
-
-  deleteItem: (id) => {
+  moveToTrash: (id) => {
     const state = get();
     const item = state.items.find((entry) => entry.id === id);
 
@@ -367,22 +538,118 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
       throw new Error("Item does not exist");
     }
 
-    if (item.id === RootID) {
-      throw new Error("The Home folder cannot be deleted");
+    if (item.id === RootID || item.id === TrashID) {
+      throw new Error("This item cannot be moved to Trash");
     }
 
-    const idsToDelete = [id];
-    if (item.type === "folder") {
-      idsToDelete.push(...getDescendantIds(state.items, id));
+    if (item.parentId === TrashID) {
+      return;
     }
 
-    const items = state.items.filter(
-      (entry) => !idsToDelete.includes(entry.id),
+    const now = Date.now();
+
+    const items = state.items.map((entry) =>
+      entry.id === id
+        ? {
+            ...entry,
+            parentId: TrashID,
+            trashedFrom: entry.parentId,
+            modifiedAt: now,
+          }
+        : entry,
     );
+
     saveFS(items);
     set({ items });
   },
+  restoreItem: (id) => {
+    const state = get();
+    const item = state.items.find((entry) => entry.id === id);
+    if (!item) {
+      throw new Error("Item does not exist");
+    }
+    if (item.parentId !== TrashID) {
+      throw new Error("Only items in Trash can be restored");
+    }
 
+    const originalParentId = item.trashedFrom;
+    const originalParentExists =
+      originalParentId !== null &&
+      originalParentId !== undefined &&
+      state.items.some(
+        (entry) =>
+          entry.id === originalParentId &&
+          entry.type === "folder" &&
+          entry.id !== TrashID,
+      );
+
+    const parentId = originalParentExists ? originalParentId : RootID;
+    const now = Date.now();
+    const items = state.items.map((entry) =>
+      entry.id === id
+        ? {
+            ...entry,
+            parentId,
+            trashedFrom: undefined,
+            modifiedAt: now,
+          }
+        : entry,
+    );
+
+    saveFS(items);
+    set({ items });
+  },
+  permanentlyDeleteItem: (id) => {
+    const state = get();
+    const item = state.items.find((entry) => entry.id === id);
+    if (!item) {
+      throw new Error("Item does not exist");
+    }
+    if (item.id === RootID || item.id === TrashID) {
+      throw new Error("This item cannot be deleted");
+    }
+    const idsToDelete = new Set([id]);
+    const collectDescendants = (parentId: string) => {
+      for (const child of state.items.filter(
+        (entry) => entry.parentId === parentId,
+      )) {
+        idsToDelete.add(child.id);
+        if (child.type === "folder") collectDescendants(child.id);
+      }
+    };
+
+    if (item.type === "folder") collectDescendants(item.id);
+    const items = state.items.filter((entry) => !idsToDelete.has(entry.id));
+    saveFS(items);
+    set({ items });
+  },
+  emptyTrash: () => {
+    const state = get();
+    const trashIds = new Set<string>();
+    const collectTrash = (parentId: string) => {
+      for (const item of state.items.filter(
+        (entry) => entry.parentId === parentId,
+      )) {
+        trashIds.add(item.id);
+        if (item.type === "folder") collectTrash(item.id);
+      }
+    };
+    collectTrash(TrashID);
+    const items = state.items.filter((item) => !trashIds.has(item.id));
+    saveFS(items);
+    set({ items });
+  },
+  // deleteItem: (id) => {
+  //   const state = get();
+  //   const item = state.items.find((entry) => entry.id === id);
+  //   if (!item) {throw new Error("Item does not exist")}
+  //   if (item.id === RootID) {throw new Error("The Home folder cannot be deleted")}
+  //   const idsToDelete = [id];
+  //   if (item.type === "folder") {idsToDelete.push(...getDescendantIds(state.items, id))}
+  //   const items = state.items.filter((entry) => !idsToDelete.includes(entry.id));
+  //   saveFS(items);
+  //   set({ items });
+  // },
   resetFileSystem: () => {
     const items = createInitFS();
     saveFS(items);

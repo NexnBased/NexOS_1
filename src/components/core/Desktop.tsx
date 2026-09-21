@@ -83,7 +83,8 @@ function Desktop() {
   }, [closeContextMenu]);
 
   useEffect(() => {
-    const welcomeWasDismissed = localStorage.getItem("nexos.welcome-dismissed") === "true";
+    const welcomeWasDismissed =
+      localStorage.getItem("nexos.welcome-dismissed") === "true";
     if (!welcomeWasDismissed) {
       openWindow("welcome");
     }

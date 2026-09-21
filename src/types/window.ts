@@ -7,7 +7,9 @@ export interface WindowData {
   component: ComponentType<{
     width: number;
     height: number;
+    fileId?: string;
   }>;
+  fileId?: string;
   x: number;
   y: number;
   width: number;

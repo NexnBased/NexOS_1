@@ -17,7 +17,7 @@ function Notes() {
     try {
       const saved = localStorage.getItem(StorageKey);
       if (saved) return JSON.parse(saved);
-    } catch { }
+    } catch {}
     return [
       {
         id: "1",
@@ -73,10 +73,11 @@ function Notes() {
           <button
             onClick={addNote}
             disabled={notes.length >= MaxNotes}
-            className={`w-full py-1 px-2 text-[11px] font-medium rounded-md! transition-colors ${notes.length >= MaxNotes
-              ? "bg-zinc-800/40 cursor-not-allowed"
-              : "bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white"
-              }`}
+            className={`w-full py-1 px-2 text-[11px] font-medium rounded-md! transition-colors ${
+              notes.length >= MaxNotes
+                ? "bg-zinc-800/40 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white"
+            }`}
           >
             New Note
           </button>
@@ -93,10 +94,11 @@ function Notes() {
                 <div
                   key={note.id}
                   onClick={() => setActiveId(note.id)}
-                  className={`group relative p-2 rounded-md cursor-pointer transition-colors flex flex-col gap-0.5 ${active
-                    ? "bg-purple-200/50 text-black/80"
-                    : "hover:bg-purple-200/20 text-black/40 hover:text-black/80"
-                    }`}
+                  className={`group relative p-2 rounded-md cursor-pointer transition-colors flex flex-col gap-0.5 ${
+                    active
+                      ? "bg-purple-200/50 text-black/80"
+                      : "hover:bg-purple-200/20 text-black/40 hover:text-black/80"
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[11px] font-bold tracking-tight truncate flex-1">

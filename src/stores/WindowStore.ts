@@ -20,6 +20,7 @@ interface WindowStore {
       y?: number;
       width?: number;
       height?: number;
+      fileId?: string;
     },
   ) => void;
 
@@ -125,13 +126,13 @@ export const useWindowStore = create<WindowStore>((set) => ({
             window.id === existingWindow.id
               ? {
                   ...window,
+                  fileId: options?.fileId ?? window.fileId,
                   minimized: false,
-                  zIndex: state.nextZIndex,
+                  zIndex: state.nextZIndex
                 }
-              : window,
+              : window
           ),
-
-          nextZIndex: state.nextZIndex + 1,
+          nextZIndex: state.nextZIndex + 1
         };
       }
 
@@ -157,6 +158,7 @@ export const useWindowStore = create<WindowStore>((set) => ({
         appId: app.id,
         title: app.title,
         component: app.component,
+        fileId: options?.fileId,
         x: Math.min(
           Math.max(0, x),
           Math.max(0, state.desktopViewport.width - width),

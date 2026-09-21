@@ -5,10 +5,12 @@ import Files from "../components/apps/Files";
 import Welcome from "../components/apps/Welcome";
 import Calendar from "../components/apps/Calendar";
 import Calculator from "../components/apps/Calculator";
+import TextEditor from "../components/apps/TextEditor";
 
 export interface AppProps {
   width: number;
   height: number;
+  fileId?: string;
 }
 
 export interface AppDefinition {
@@ -95,5 +97,17 @@ export const AppRegistry: Record<string, AppDefinition> = {
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: false,
-  }
+  },
+  texteditor: {
+    id: "texteditor",
+    title: "Text Editor",
+    component: TextEditor,
+    defaultWidth: 400,
+    defaultHeight: 500,
+    resizable: false,
+    icon: "https://gedit-text-editor.org/images/gedit-icon.png",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: false,
+  },
 };

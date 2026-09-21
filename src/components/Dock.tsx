@@ -16,7 +16,9 @@ function Dock() {
     const registeredApps = Object.values(AppRegistry);
     const runningAppIds = new Set(windows.map((window) => window.appId));
 
-    return registeredApps.filter((app) => app.showInDock !== false || runningAppIds.has(app.id));
+    return registeredApps.filter(
+      (app) => app.showInDock !== false || runningAppIds.has(app.id),
+    );
   }, [windows]);
 
   const maximizedWindow = windows.some(
@@ -43,7 +45,11 @@ function Dock() {
 
   const hasVisibleWindows = windows.some((window) => !window.minimized);
   const allWindowMinimized = windows.length > 0 && !hasVisibleWindows;
-  const shouldHide = !allWindowMinimized && (launcherOpen || maximizedWindow || (isWindowHovered && !dockHovered && !bottomReveal));
+  const shouldHide =
+    !allWindowMinimized &&
+    (launcherOpen ||
+      maximizedWindow ||
+      (isWindowHovered && !dockHovered && !bottomReveal));
 
   return (
     <nav

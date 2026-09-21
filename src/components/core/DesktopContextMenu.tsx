@@ -1,6 +1,7 @@
 import { Grid2X2, RefreshCw } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import {
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
@@ -26,42 +27,34 @@ function DesktopContextMenu({ desktopRef }: Props) {
   const closeContextMenu = useUIStore((state) => state.closeContextMenu);
   const openLauncher = useUIStore((state) => state.openLauncher);
   const [position, setPosition] = useState<MenuPosition>(contextMenuPosition);
-  const [ready, setReady] = useState(false);
-  const updatePosition = () => {
+  const updatePosition = useCallback(() => {
     const menu = menuRef.current;
     const desktop = desktopRef.current;
-
-    if (!menu || !desktop) {
-      return;
-    }
-
+    if (!menu || !desktop) return;
     const desktopRect = desktop.getBoundingClientRect();
     const menuRect = menu.getBoundingClientRect();
     const padding = 6;
-    const maxX = Math.max(padding, desktopRect.width - menuRect.width - padding);
-    const maxY = Math.max(padding, desktopRect.height - menuRect.height - padding);
+
+    const maxX = Math.max(
+      padding,
+      desktopRect.width - menuRect.width - padding,
+    );
+    const maxY = Math.max(
+      padding,
+      desktopRect.height - menuRect.height - padding,
+    );
 
     setPosition({
       x: Math.min(Math.max(contextMenuPosition.x, padding), maxX),
       y: Math.min(Math.max(contextMenuPosition.y, padding), maxY),
     });
-
-    setReady(true);
-  };
+  }, [contextMenuPosition, desktopRef]);
 
   useLayoutEffect(() => {
-    if (!contextMenuOpen) {
-      setReady(false);
-      return;
-    }
-
+    if (!contextMenuOpen) return;
     const frame = requestAnimationFrame(updatePosition);
     const desktop = desktopRef.current;
-
-    if (!desktop) {
-      return () => cancelAnimationFrame(frame);
-    }
-
+    if (!desktop) return () => cancelAnimationFrame(frame);
     const resizeObserver = new ResizeObserver(updatePosition);
     resizeObserver.observe(desktop);
     window.addEventListener("resize", updatePosition);
@@ -71,11 +64,7 @@ function DesktopContextMenu({ desktopRef }: Props) {
       resizeObserver.disconnect();
       window.removeEventListener("resize", updatePosition);
     };
-  }, [
-    contextMenuOpen,
-    contextMenuPosition,
-    desktopRef,
-  ]);
+  }, [contextMenuOpen, desktopRef, updatePosition]);
 
   const handleOpenApplications = () => {
     closeContextMenu();
@@ -87,16 +76,16 @@ function DesktopContextMenu({ desktopRef }: Props) {
     window.location.reload();
   };
 
-  const handleKeyDown = (
-    event: KeyboardEvent<HTMLDivElement>,
-  ) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const items = Array.from(
       menuRef.current?.querySelectorAll<HTMLButtonElement>(
         '[role="menuitem"]',
       ) ?? [],
     );
 
-    const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement,);
+    const currentIndex = items.indexOf(
+      document.activeElement as HTMLButtonElement,
+    );
 
     if (event.key === "Escape") {
       event.preventDefault();
@@ -106,10 +95,7 @@ function DesktopContextMenu({ desktopRef }: Props) {
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      const nextIndex =
-        currentIndex >= items.length - 1
-          ? 0
-          : currentIndex + 1;
+      const nextIndex = currentIndex >= items.length - 1 ? 0 : currentIndex + 1;
 
       items[nextIndex]?.focus();
       return;
@@ -118,9 +104,7 @@ function DesktopContextMenu({ desktopRef }: Props) {
     if (event.key === "ArrowUp") {
       event.preventDefault();
       const previousIndex =
-        currentIndex <= 0
-          ? items.length - 1
-          : currentIndex - 1;
+        currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
 
       items[previousIndex]?.focus();
       return;
@@ -160,9 +144,9 @@ function DesktopContextMenu({ desktopRef }: Props) {
               y: -3,
             }}
             animate={{
-              opacity: ready ? 1 : 0,
-              scale: ready ? 1 : 0.96,
-              y: ready ? 0 : -3,
+              opacity: 1,
+              scale: 1,
+              y: 0,
             }}
             exit={{
               opacity: 0,
@@ -215,11 +199,7 @@ interface ItemProps {
   onClick: () => void;
 }
 
-function ContextMenuItem({
-  icon,
-  label,
-  onClick,
-}: ItemProps) {
+function ContextMenuItem({ icon, label, onClick }: ItemProps) {
   return (
     <button
       type="button"
@@ -227,7 +207,9 @@ function ContextMenuItem({
       onClick={onClick}
       className="flex w-full items-center gap-2 rounded-md! px-2 py-1.5 text-left text-xs font-medium text-purple-500 transition-colors duration-150 hover:bg-purple-400 hover:text-purple-950 focus:bg-purple-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-purple-400 active:bg-purple-200"
     >
-      <span className="flex size-4 shrink-0 items-center justify-center text-purple-600">{icon}</span>
+      <span className="flex size-4 shrink-0 items-center justify-center text-purple-600">
+        {icon}
+      </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
     </button>
   );

@@ -1,4 +1,3 @@
-import "../styles/Topbar.css";
 import dayjs from "dayjs";
 import { useRef, useState, useEffect } from "react";
 import { PowerIcon, Volume2Icon, WifiIcon } from "lucide-react";
@@ -23,7 +22,7 @@ function Topbar() {
       <section className="relative w-1/3 flex flex-row gap-1 items-center justify-start">
         <button
           type="button"
-          className="w-18 h-6 tracking-wider text-purple-400 select-none pointer-events-none"
+          className="w-18 h-6 font-bold text-sm  tracking-wider text-purple-400 select-none pointer-events-none"
           disabled
         >
           NexOS
@@ -33,14 +32,14 @@ function Topbar() {
         <button
           disabled
           type="button"
-          className="w-18 h-6 flex items-center justify-center tracking-wider select-none pointer-events-none text-purple-400"
+          className="w-18 h-6 font-bold text-sm flex items-center justify-center tracking-wider select-none pointer-events-none text-purple-400"
         >
           {currentTime.format("MMM D")}
         </button>
         <button
           disabled
           type="button"
-          className="w-21 h-6 flex items-center justify-center tracking-wider select-none pointer-events-none text-purple-400"
+          className="w-21 h-6 font-bold text-sm flex items-center justify-center tracking-wider select-none pointer-events-none text-purple-400"
         >
           {currentTime.format("HH:mm A")}
         </button>
@@ -49,7 +48,7 @@ function Topbar() {
         <button
           disabled
           type="button"
-          className="w-24 h-6 flex gap-3 items-center justify-center pointer-events-none select-none tracking-wider text-purple-400"
+          className="w-24 h-6 font-bold text-sm flex gap-3 items-center justify-center pointer-events-none select-none tracking-wider text-purple-400"
         >
           <WifiIcon size={15} strokeWidth={3} />
           <Volume2Icon size={15} strokeWidth={3} />

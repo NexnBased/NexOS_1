@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react";
 import { useRef, useMemo, useState, useEffect } from "react";
 import {
   ArchiveIcon,
@@ -15,128 +15,56 @@ import {
   MusicIcon,
   PencilIcon,
   PlusIcon,
+  RotateCcwIcon,
   SearchIcon,
   Trash2Icon,
   VideoIcon,
   XIcon,
 } from "lucide-react";
+import {
+  type FSItem,
+  RootID as rootID,
+  TrashID as trashID,
+} from "../../types/filesystem";
+import { useFileSystemStore } from "../../stores/FileSystemStore";
+import { useWindowStore } from "../../stores/WindowStore";
 
-type ItemType = "file" | "folder";
-type FileType = "text" | "image" | "code" | "audio" | "video";
-
-interface VFSItem {
-  id: string;
-  name: string;
-  type: ItemType;
-  parentId: string | null;
-  fileType?: FileType;
-  content?: string;
-  size?: number;
-}
-
-interface Props {
-  width: number;
-  height: number;
-}
-
-const StorageKey = "nexos.fs";
-const createId = () => crypto.randomUUID();
-
-const initItems: VFSItem[] = [
-  { id: "home", name: "Home", type: "folder", parentId: null },
-  { id: "desktop", name: "Desktop", type: "folder", parentId: "home" },
-  { id: "documents", name: "Documents", type: "folder", parentId: "home" },
-  { id: "downloads", name: "Downloads", type: "folder", parentId: "home" },
-  { id: "pictures", name: "Pictures", type: "folder", parentId: "home" },
-  { id: "music", name: "Music", type: "folder", parentId: "home" },
-  { id: "videos", name: "Videos", type: "folder", parentId: "home" },
-  { id: "trash", name: "Trash", type: "folder", parentId: null },
-  {
-    id: "welcome",
-    name: "welcome.txt",
-    type: "file",
-    parentId: "home",
-    fileType: "text",
-    content:
-      "Welcome to NexOS.\n\nThis is a virtual file stored inside the NexOS filesystem.",
-    size: 86,
-  },
-  {
-    id: "app",
-    name: "App.tsx",
-    type: "file",
-    parentId: "documents",
-    fileType: "code",
-    content:
-      'import React from "react";\n\nexport default function App() {\n return <div>NexOS</div>;\n}',
-    size: 92,
-  },
-  {
-    id: "wallpaper",
-    name: "wallpaper.jpg",
-    type: "file",
-    parentId: "pictures",
-    fileType: "image",
-    size: 2048,
-  },
-  {
-    id: "ambient",
-    name: "ambient.mp3",
-    type: "file",
-    parentId: "music",
-    fileType: "audio",
-    size: 4096,
-  },
-  {
-    id: "demo",
-    name: "demo.mp4",
-    type: "file",
-    parentId: "videos",
-    fileType: "video",
-    size: 8192,
-  },
-];
-
-const loadItems = (): VFSItem[] => {
-  try {
-    const stored = localStorage.getItem(StorageKey);
-    if (!stored) {
-      localStorage.setItem(StorageKey, JSON.stringify(initItems));
-      return initItems;
-    }
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) {
-      localStorage.setItem(StorageKey, JSON.stringify(initItems));
-      return initItems;
-    }
-
-    const existingIds = new Set(parsed.map((item: VFSItem) => item.id));
-    const missingItems = initItems.filter((item) => !existingIds.has(item.id));
-    if (missingItems.length > 0) {
-      const mergedItems = [...parsed, ...missingItems];
-      localStorage.setItem(StorageKey, JSON.stringify(mergedItems));
-
-      return mergedItems;
-    }
-
-    return parsed;
-  } catch {
-    localStorage.setItem(StorageKey, JSON.stringify(initItems));
-    return initItems;
+const getFileCategory = (
+  item: FSItem,
+): "text" | "image" | "code" | "audio" | "video" => {
+  if (item.type === "folder") {
+    return "text";
   }
+
+  if (item.mimeType?.startsWith("image/")) {
+    return "image";
+  }
+
+  if (item.mimeType?.startsWith("audio/")) {
+    return "audio";
+  }
+
+  if (item.mimeType?.startsWith("video/")) {
+    return "video";
+  }
+
+  if (
+    item.mimeType === "text/typescript" ||
+    item.mimeType === "text/javascript" ||
+    item.mimeType === "text/css"
+  ) {
+    return "code";
+  }
+
+  return "text";
 };
 
-const saveItems = (items: VFSItem[]) => {
-  localStorage.setItem(StorageKey, JSON.stringify(items));
-};
-
-const getFileIcon = (item: VFSItem, size = 22) => {
+const getFileIcon = (item: FSItem, size = 22) => {
   if (item.type === "folder") {
     return <FolderIcon size={size} />;
   }
 
-  switch (item.fileType) {
+  switch (getFileCategory(item)) {
     case "image":
       return <FileImageIcon size={size} />;
     case "code":
@@ -150,11 +78,13 @@ const getFileIcon = (item: VFSItem, size = 22) => {
   }
 };
 
-const uniqueName = (
-  items: VFSItem[],
-  parentId: string | null,
-  name: string,
-) => {
+const isEditableTextFile = (item: FSItem) => {
+  if (item.type !== "file") return false;
+  const category = getFileCategory(item);
+  return category === "text" || category === "code";
+}
+
+const uniqueName = (items: FSItem[], parentId: string | null, name: string) => {
   const names = new Set(
     items
       .filter((item) => item.parentId === parentId)
@@ -179,11 +109,16 @@ const uniqueName = (
   return candicate;
 };
 
-function Files({ width: _width, height: _height }: Props) {
-  const [items, setItems] = useState<VFSItem[]>(loadItems);
-  const [currentId, setCurrentId] = useState("home");
-  const [history, setHistory] = useState<string[]>(["home"]);
-  const [historyIndex, setHistoryIndex] = useState(0);
+function Files() {
+  const items = useFileSystemStore((state) => state.items);
+  const createFolderInStore = useFileSystemStore((state) => state.createFolder);
+  const createFileInStore = useFileSystemStore((state) => state.createFile);
+  const renameItemInStore = useFileSystemStore((state) => state.renameItem);
+  const moveToTrash = useFileSystemStore((state) => state.moveToTrash);
+  const restoreItem = useFileSystemStore((state) => state.restoreItem);
+  const permanentlyDeleteItem = useFileSystemStore((state) => state.permanentlyDeleteItem);
+  const openWindow = useWindowStore((state) => state.openWindow);
+  const [currentId, setCurrentId] = useState(rootID);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -193,9 +128,6 @@ function Files({ width: _width, height: _height }: Props) {
   const renameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    saveItems(items);
-  }, [items]);
-  useEffect(() => {
     if (renameId) {
       requestAnimationFrame(() => {
         renameRef.current?.focus();
@@ -204,75 +136,70 @@ function Files({ width: _width, height: _height }: Props) {
     }
   }, [renameId]);
 
-  const currentFolder = items.find((item) => item.id === currentId);
+  const currentFolder = items.find(
+    (item) => item.id === currentId && item.type === "folder",
+  );
+  const activeCurrentId = currentFolder ? currentId : rootID;
+  const activeFolder =
+    currentFolder ??
+    items.find((item) => item.id === rootID && item.type === "folder");
   const currentItems = useMemo(() => {
-    const children = items.filter((item) => item.parentId === currentId);
-    if (!search.trim()) {
-      return children;
-    }
-    const query = search.toLowerCase();
+    const children = items.filter((item) => item.parentId === activeCurrentId);
+    if (!search.trim()) return children;
+    const query = search.trim().toLowerCase();
 
     return children.filter((item) => item.name.toLowerCase().includes(query));
-  }, [items, currentId, search]);
-  const breadcrumps = useMemo(() => {
-    const result: VFSItem[] = [];
-    let cursor = currentFolder;
+  }, [items, activeCurrentId, search]);
+  const emptyTrash = useFileSystemStore((state) => state.emptyTrash);
+  const breadcrumbs = useMemo(() => {
+    const result: FSItem[] = [];
+    let cursor = activeFolder;
+
     while (cursor) {
       result.unshift(cursor);
-      if (!cursor.parentId) {
-        break;
-      }
+      if (cursor.parentId === null) break;
       cursor = items.find((item) => item.id === cursor?.parentId);
     }
 
     return result;
-  }, [currentFolder, items]);
+  }, [activeFolder, items]);
   const previewItem = previewId
     ? items.find((item) => item.id === previewId)
     : null;
   const navigate = (id: string) => {
-    if (id === currentId) return;
-    const nextHistory = history.slice(0, historyIndex + 1);
-    nextHistory.push(id);
-    setHistory(nextHistory);
-    setHistoryIndex(nextHistory.length - 1);
-    setCurrentId(id);
+    const destination = items.find(
+      (item) => item.id === id && item.type === "folder",
+    );
+    if (!destination || destination.id === activeCurrentId) return;
+
+    setCurrentId(destination.id);
     setSelectedId(null);
     setSearch("");
   };
 
   const createFolder = () => {
-    const name = uniqueName(items, currentId, "New Folder");
-    setItems((prev) => [
-      ...prev,
-      {
-        id: createId(),
-        name,
-        type: "folder",
-        parentId: currentId,
-      },
-    ]);
-    setShowCreateMenu(false);
+    const name = uniqueName(items, activeCurrentId, "New Folder");
+
+    try {
+      createFolderInStore(name, activeCurrentId);
+      setShowCreateMenu(false);
+    } catch (error) {
+      console.error("Could not create folder:", error);
+    }
   };
 
   const createTextFile = () => {
-    const name = uniqueName(items, currentId, "readme.txt");
-    setItems((prev) => [
-      ...prev,
-      {
-        id: createId(),
-        name,
-        type: "file",
-        parentId: currentId,
-        fileType: "text",
-        content: "",
-        size: 0,
-      },
-    ]);
-    setShowCreateMenu(false);
+    const name = uniqueName(items, activeCurrentId, "readme.txt");
+
+    try {
+      createFileInStore(name, activeCurrentId, "", "text/plain");
+      setShowCreateMenu(false);
+    } catch (error) {
+      console.error("Could not create file:", error);
+    }
   };
 
-  const beginRename = (item: VFSItem) => {
+  const beginRename = (item: FSItem) => {
     setRenameId(item.id);
     setRenameValue(item.name);
   };
@@ -284,84 +211,72 @@ function Files({ width: _width, height: _height }: Props) {
       setRenameId(null);
       return;
     }
+
     const trimmed = renameValue.trim();
     if (!trimmed) {
       setRenameId(null);
       return;
     }
-    const name = uniqueName(
-      items.filter((item) => item.id !== target.id),
-      target.parentId,
-      trimmed,
-    );
-    setItems((previous) =>
-      previous.map((item) => (item.id === renameId ? { ...item, name } : item)),
-    );
+
+    try {
+      renameItemInStore(renameId, trimmed);
+    } catch (error) {
+      console.error("Could not rename item:", error);
+    }
     setRenameId(null);
   };
 
-  const deleteItem = (id: string) => {
-    const target = items.find((item) => item.id === id);
-    if (!target || id === "home" || id === "trash") return;
-    const descendants = new Set<string>();
-    const collect = (parentId: string) => {
-      items.forEach((item) => {
-        if (item.parentId === parentId) {
-          descendants.add(item.id);
-          if (item.type === "folder") {
-            collect(item.id);
-          }
-        }
-      });
-    };
-    if (target.type === "folder") {
-      collect(id);
+  const handleRestore = (id: string) => {
+    try {
+      restoreItem(id);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Could not restore item:", error);
     }
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id || descendants.has(item.id)) {
-          return {
-            ...item,
-            parentId: "trash",
-          };
-        }
-
-        return item;
-      }),
-    );
-
-    setSelectedId(null);
   };
 
   const permanentlyDelete = (id: string) => {
-    const descendants = new Set<string>();
-    const collect = (parentId: string) => {
-      items.forEach((item) => {
-        if (item.parentId === parentId) {
-          descendants.add(item.id);
-          if (item.type === "folder") {
-            collect(item.id);
-          }
-        }
-      });
-    };
-    collect(id);
-    setItems((prev) =>
-      prev.filter((item) => item.id !== id && !descendants.has(item.id)),
-    );
-
-    setSelectedId(null);
+    try {
+      permanentlyDeleteItem(id);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Could not permanently delete item:", error);
+    }
   };
 
-  const handleItemDoubleClick = (item: VFSItem) => {
+  const handleMoveToTrash = (id: string) => {
+    try {
+      moveToTrash(id);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Could not move item to Trash:", error);
+    }
+  };
+
+  const handleEmptryTrash = () => {
+    try {
+      emptyTrash();
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Couldn't empty Trash:", error);
+    }
+  };
+
+  const handleItemDoubleClick = (item: FSItem) => {
     if (item.type === "folder") {
       navigate(item.id);
       return;
     }
+
+    if (isEditableTextFile(item)) {
+      openWindow("text-editor", { fileId: item.id });
+      return;
+    }
+
     setPreviewId(item.id);
   };
 
-  const handleItemClick = (item: VFSItem) => {
+  const handleItemClick = (item: FSItem) => {
     setSelectedId(item.id);
   };
 
@@ -371,13 +286,13 @@ function Files({ width: _width, height: _height }: Props) {
   };
 
   const sidebarItems = [
-    { id: "home", name: "Home", icon: HomeIcon },
+    { id: rootID, name: "Home", icon: HomeIcon },
     { id: "documents", name: "Documents", icon: FileTextIcon },
     { id: "downloads", name: "Downloads", icon: ArchiveIcon },
     { id: "pictures", name: "Pictures", icon: FileImageIcon },
     { id: "music", name: "Music", icon: MusicIcon },
     { id: "videos", name: "Videos", icon: VideoIcon },
-    { id: "trash", name: "Trash", icon: Trash2Icon },
+    { id: trashID, name: "Trash", icon: Trash2Icon },
   ];
 
   return (
@@ -396,7 +311,7 @@ function Files({ width: _width, height: _height }: Props) {
           <div className="flex min-h-0 flex-1 flex-col gap-1">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
-              const active = currentId === item.id;
+              const active = activeCurrentId === item.id;
               return (
                 <button
                   key={item.id}
@@ -406,8 +321,8 @@ function Files({ width: _width, height: _height }: Props) {
                   className={[
                     "flex h-9 w-full shrink-0 items-center rounded-md! text-left text-sm transition gap-3 px-3",
                     active
-                      ? "bg-zinc-900/10 text-zinc-950"
-                      : "text-zinc-900/55 hover:bg-zinc-800/20 hover:text-zinc-300",
+                      ? "bg-purple-200/70 text-purple-950"
+                      : "text-zinc-700 hover:bg-purple-100/70 hover:text-purple-900",
                   ].join(" ")}
                 >
                   <Icon size={17} strokeWidth={1.8} />
@@ -480,10 +395,13 @@ function Files({ width: _width, height: _height }: Props) {
         >
           <div className="flex min-w-0 flex-1 items-center overflow-hidden">
             <div className="flex min-w-0 items-center overflow-x-auto scrollbar-none">
-              {breadcrumps.map((item, index) => (
+              {breadcrumbs.map((item, index) => (
                 <div key={item.id} className="flex shrink-0 items-center">
                   {index > 0 && (
-                    <ChevronRightIcon size={13} className="mx-1 shrink-0 text-white/20" />
+                    <ChevronRightIcon
+                      size={13}
+                      className="mx-1 shrink-0 text-white/20"
+                    />
                   )}
                   <button
                     type="button"
@@ -500,6 +418,17 @@ function Files({ width: _width, height: _height }: Props) {
                 </div>
               ))}
             </div>
+            {activeCurrentId === trashID && (
+              <div className="flex justify-end border-b border-white/5 p-2">
+                <button
+                  type="button"
+                  onClick={handleEmptryTrash}
+                  className="rounded-md px-2 py-1 text-xs text-red-300 transition hover:bg-red-400/10 hover:text-red-200"
+                >
+                  Empty Trash
+                </button>
+              </div>
+            )}
           </div>
         </header>
         <section
@@ -512,16 +441,22 @@ function Files({ width: _width, height: _height }: Props) {
                 <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/4 text-white/20">
                   <FolderOpenIcon size={27} strokeWidth={1.5} />
                 </div>
-                <p className="text-sm text-white/45">{search ? "No matching files" : "This folder is empty"}</p>
+                <p className="text-sm text-white/45">
+                  {search ? "No matching files" : "This folder is empty"}
+                </p>
                 <p className="mt-1 text-xs text-white/20">
-                  {search ? "Try a different search." : "Create a folder or file."}
+                  {search
+                    ? "Try a different search."
+                    : "Create a folder or file."}
                 </p>
               </div>
             </div>
           ) : (
             <div
               className="grid content-start gap-2 p-3"
-              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(84px, 92px))" }}
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(84px, 92px))",
+              }}
             >
               {currentItems.map((item) => {
                 const selected = selectedId === item.id;
@@ -591,31 +526,46 @@ function Files({ width: _width, height: _height }: Props) {
                     </div>
                     {selected && !renaming && (
                       <div className="mt-1 flex items-center gap-1">
-                        <button
-                          type="button"
-                          title="Rename"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            beginRename(item);
-                          }}
-                          className="flex h-6 w-6 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white"
-                        >
-                          <PencilIcon size={12} />
-                        </button>
+                        {activeCurrentId === trashID && (
+                          <button
+                            type="button"
+                            title="Restore"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleRestore(item.id);
+                            }}
+                            className="flex h-6 w-6 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-purple-300"
+                          >
+                            <RotateCcwIcon size={12} />
+                          </button>
+                        )}
+
+                        {activeCurrentId !== trashID && (
+                          <button
+                            type="button"
+                            title="Rename"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              beginRename(item);
+                            }}
+                            className="flex h-6 w-6 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white"
+                          >
+                            <PencilIcon size={12} />
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           title={
-                            currentId === "trash"
+                            activeCurrentId === trashID
                               ? "Delete permanently"
                               : "Move to Trash"
                           }
                           onClick={(event) => {
                             event.stopPropagation();
-                            if (currentId === "trash") {
+                            if (activeCurrentId === trashID)
                               permanentlyDelete(item.id);
-                            } else {
-                              deleteItem(item.id);
-                            }
+                            else handleMoveToTrash(item.id);
                           }}
                           className="flex h-6 w-6 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-red-300"
                         >
@@ -623,6 +573,25 @@ function Files({ width: _width, height: _height }: Props) {
                         </button>
                       </div>
                     )}
+                    {selected &&
+  !renaming &&
+  item.type === "file" &&
+  isEditableTextFile(item) && (
+    <button
+      type="button"
+      title="Open in Text Editor"
+      onClick={(event) => {
+        event.stopPropagation();
+
+        openWindow("text-editor", {
+          fileId: item.id,
+        });
+      }}
+      className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] text-purple-200 hover:bg-purple-500/15"
+    >
+      Open
+    </button>
+  )}
                   </div>
                 );
               })}
@@ -641,8 +610,12 @@ function Files({ width: _width, height: _height }: Props) {
           >
             <div className="flex h-11 shrink-0 items-center justify-between border-b border-white/[0.07] px-3">
               <div className="flex min-w-0 items-center gap-2">
-                <div className="shrink-0 text-white/45">{getFileIcon(previewItem, 16)}</div>
-                <span className="truncate text-xs text-white/65">{previewItem.name}</span>
+                <div className="shrink-0 text-white/45">
+                  {getFileIcon(previewItem, 16)}
+                </div>
+                <span className="truncate text-xs text-white/65">
+                  {previewItem.name}
+                </span>
               </div>
               <button
                 type="button"
@@ -653,19 +626,19 @@ function Files({ width: _width, height: _height }: Props) {
               </button>
             </div>
             <div className="min-h-0 overflow-auto p-4">
-              {previewItem.fileType === "text" ||
-                previewItem.fileType === "code" ? (
+              {getFileCategory(previewItem) === "text" ||
+              getFileCategory(previewItem) === "code" ? (
                 <pre className="whitespace-pre-wrap wrap-break-words rounded-xl bg-black/20 p-4 text-xs leading-6 text-white/65">
                   {previewItem.content || "Empty file"}
                 </pre>
-              ) : previewItem.fileType === "image" ? (
+              ) : getFileCategory(previewItem) === "image" ? (
                 <div className="flex min-h-45 items-center justify-center rounded-xl bg-black/20 p-6">
                   <div className="flex flex-col items-center gap-2 text-white/25">
                     <FileImageIcon size={42} strokeWidth={1.4} />
                     <span className="text-xs">Image preview unavailable</span>
                   </div>
                 </div>
-              ) : previewItem.fileType === "audio" ? (
+              ) : getFileCategory(previewItem) === "audio" ? (
                 <div className="flex min-h-45 flex-col items-center justify-center gap-4 rounded-xl bg-black/20">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/5 text-white/35">
                     <MusicIcon size={28} />
@@ -674,7 +647,7 @@ function Files({ width: _width, height: _height }: Props) {
                     Audio preview unavailable
                   </span>
                 </div>
-              ) : previewItem.fileType === "video" ? (
+              ) : getFileCategory(previewItem) === "video" ? (
                 <div className="flex min-h-45 items-center justify-center rounded-xl bg-black/20">
                   <div className="flex flex-col items-center gap-2 text-white/25">
                     <VideoIcon size={42} strokeWidth={1.4} />
