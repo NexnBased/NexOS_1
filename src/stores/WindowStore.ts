@@ -128,11 +128,11 @@ export const useWindowStore = create<WindowStore>((set) => ({
                   ...window,
                   fileId: options?.fileId ?? window.fileId,
                   minimized: false,
-                  zIndex: state.nextZIndex
+                  zIndex: state.nextZIndex,
                 }
-              : window
+              : window,
           ),
-          nextZIndex: state.nextZIndex + 1
+          nextZIndex: state.nextZIndex + 1,
         };
       }
 

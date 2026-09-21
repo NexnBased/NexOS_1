@@ -82,7 +82,7 @@ const isEditableTextFile = (item: FSItem) => {
   if (item.type !== "file") return false;
   const category = getFileCategory(item);
   return category === "text" || category === "code";
-}
+};
 
 const uniqueName = (items: FSItem[], parentId: string | null, name: string) => {
   const names = new Set(
@@ -116,7 +116,9 @@ function Files() {
   const renameItemInStore = useFileSystemStore((state) => state.renameItem);
   const moveToTrash = useFileSystemStore((state) => state.moveToTrash);
   const restoreItem = useFileSystemStore((state) => state.restoreItem);
-  const permanentlyDeleteItem = useFileSystemStore((state) => state.permanentlyDeleteItem);
+  const permanentlyDeleteItem = useFileSystemStore(
+    (state) => state.permanentlyDeleteItem,
+  );
   const openWindow = useWindowStore((state) => state.openWindow);
   const [currentId, setCurrentId] = useState(rootID);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -574,24 +576,24 @@ function Files() {
                       </div>
                     )}
                     {selected &&
-  !renaming &&
-  item.type === "file" &&
-  isEditableTextFile(item) && (
-    <button
-      type="button"
-      title="Open in Text Editor"
-      onClick={(event) => {
-        event.stopPropagation();
+                      !renaming &&
+                      item.type === "file" &&
+                      isEditableTextFile(item) && (
+                        <button
+                          type="button"
+                          title="Open in Text Editor"
+                          onClick={(event) => {
+                            event.stopPropagation();
 
-        openWindow("text-editor", {
-          fileId: item.id,
-        });
-      }}
-      className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] text-purple-200 hover:bg-purple-500/15"
-    >
-      Open
-    </button>
-  )}
+                            openWindow("texteditor", {
+                              fileId: item.id,
+                            });
+                          }}
+                          className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] text-purple-200 hover:bg-purple-500/15"
+                        >
+                          Open
+                        </button>
+                      )}
                   </div>
                 );
               })}
