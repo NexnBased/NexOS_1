@@ -255,7 +255,7 @@ function Files() {
     }
   };
 
-  const handleEmptryTrash = () => {
+  const handleEmptyTrash = () => {
     try {
       emptyTrash();
       setSelectedId(null);
@@ -424,7 +424,7 @@ function Files() {
               <div className="flex justify-end border-b border-white/5 p-2">
                 <button
                   type="button"
-                  onClick={handleEmptryTrash}
+                  onClick={handleEmptyTrash}
                   className="rounded-md px-2 py-1 text-xs text-red-300 transition hover:bg-red-400/10 hover:text-red-200"
                 >
                   Empty Trash

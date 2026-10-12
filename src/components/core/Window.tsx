@@ -180,6 +180,7 @@ function Window({
 
       <div className="flex-1 w-full min-h-0 min-w-0 relative overflow-hidden bg-purple-200/50">
         <App
+          key={`${window.id}:${window.fileId ?? "Empty"}`}
           width={viewport?.width ?? window.width}
           height={viewport?.height ?? window.height}
           fileId={window.fileId}

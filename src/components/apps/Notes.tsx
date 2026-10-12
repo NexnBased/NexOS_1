@@ -17,7 +17,9 @@ function Notes() {
     try {
       const saved = localStorage.getItem(StorageKey);
       if (saved) return JSON.parse(saved);
-    } catch {}
+    } catch (error) {
+      console.error("Could not load saved notes:", error);
+    }
     return [
       {
         id: "1",

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useCallback } from "react";
 import { SaveIcon, FileTextIcon, CircleAlertIcon } from "lucide-react";
 import { useFileSystemStore } from "../../stores/FileSystemStore";
 
@@ -16,44 +16,34 @@ function TextEditor({ fileId }: Props) {
     (state) => state.updateFileContent,
   );
 
-  const [draft, setDraft] = useState(file?.content ?? "");
-  const [savedContent, setSavedContent] = useState(file?.content ?? "");
+  const initialContent = file?.content ?? "";
+  const [draft, setDraft] = useState(initialContent);
+  const [savedContent, setSavedContent] = useState(initialContent);
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    const nextContent = file?.content ?? "";
-    setDraft(nextContent);
-    setSavedContent(nextContent);
-    setError(null);
-  }, [fileId]);
-
   const isDirty = draft !== savedContent;
-  const save = () => {
+  const save = useCallback(() => {
     if (!fileId || !file) return;
+
     try {
       updateFileContent(fileId, draft);
       setSavedContent(draft);
       setError(null);
     } catch (saveError) {
       console.error("Could not save file:", saveError);
-      setError("Unable to save this file!");
+      setError("Unable to save this file.");
     }
-  };
+  }, [draft, file, fileId, updateFileContent]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+  const handleEditorKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         save();
       }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  });
+    },
+    [save],
+  );
 
   if (!fileId) {
     return (
@@ -65,7 +55,7 @@ function TextEditor({ fileId }: Props) {
 
   if (!file) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-6 text-center text-sm font-semi-bold text-zinc-950">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-6 text-center text-sm font-semibold text-zinc-950">
         <CircleAlertIcon className="text-rose-600" size={24} strokeWidth={4} />
         <span>This file no longer exists.</span>
       </div>
@@ -98,13 +88,13 @@ function TextEditor({ fileId }: Props) {
           onClick={save}
           disabled={!isDirty}
           title="Save file"
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-purple-950 transition hover:bg-violet-900/30 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-purple-950 transition hover:bg-violet-900/30 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <SaveIcon size={12} strokeWidth={2} /> Save
         </button>
       </header>
 
-      <div className="size-full p-1">
+      <div className="min-h-0 flex-1 p-1">
         <textarea
           ref={textareaRef}
           value={draft}
@@ -112,8 +102,9 @@ function TextEditor({ fileId }: Props) {
             setDraft(event.target.value);
             setError(null);
           }}
+          onKeyDown={handleEditorKeyDown}
           spellCheck={false}
-          className="min-h-0 size-full rounded-md flex-1 resize-none overflow-auto bg-zinc-950 p-2 text-xs leading-6 text-white/80 outline-none selection:bg-purple-500/40"
+          className="size-full resize-none overflow-auto rounded-md bg-zinc-950 p-2 text-xs leading-6 text-white/80 outline-none selection:bg-purple-500/40"
           aria-label={`Editing ${file.name}`}
         />
       </div>

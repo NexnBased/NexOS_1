@@ -157,7 +157,39 @@ describe("FileSystemStore", () => {
     expect(useFileSystemStore.getState().getItem(folderId)).toBeUndefined();
     expect(useFileSystemStore.getState().getItem(fileId)).toBeUndefined();
   });
+  it("supports terminal-style file operations", () => {
+    const store = useFileSystemStore.getState();
 
+    const folderId = store.createFolder("Terminal Test", "root");
+
+    const fileId = store.createFile(
+      "hello.txt",
+      folderId,
+      "Hello from NexOS",
+      "text/plain",
+    );
+
+    expect(store.getChildren(folderId)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: fileId,
+          name: "hello.txt",
+        }),
+      ]),
+    );
+
+    store.moveItem(fileId, "root");
+
+    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
+      parentId: "root",
+    });
+
+    store.moveToTrash(fileId);
+
+    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
+      parentId: "trash",
+    });
+  });
   it("permanently deletes a file", () => {
     const store = useFileSystemStore.getState();
     const fileId = store.createFile(

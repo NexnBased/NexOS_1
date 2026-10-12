@@ -6,6 +6,7 @@ import Welcome from "../components/apps/Welcome";
 import Calendar from "../components/apps/Calendar";
 import Calculator from "../components/apps/Calculator";
 import TextEditor from "../components/apps/TextEditor";
+import Terminal from "../components/apps/Terminal";
 
 export interface AppProps {
   width: number;
@@ -35,13 +36,12 @@ export const AppRegistry: Record<string, AppDefinition> = {
     id: "welcome",
     title: "Welcome",
     component: Welcome,
+    resizable: false,
     defaultWidth: 500,
-    defaultHeight: 250,
-    minWidth: 400,
-    minHeight: 150,
+    defaultHeight: 300,
     icon: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Apple_Home_%28iOS%29.png",
-    showInLauncher: false,
-    showOnDesktop: true,
+    showInLauncher: true,
+    showOnDesktop: false,
     showInDock: false,
   },
   files: {
@@ -69,7 +69,7 @@ export const AppRegistry: Record<string, AppDefinition> = {
     icon: "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Calculator_Icon_%28macOS_27%29.png/960px-Calculator_Icon_%28macOS_27%29.png",
     showInLauncher: true,
     showOnDesktop: true,
-    showInDock: true,
+    showInDock: false,
   },
   notes: {
     id: "notes",
@@ -106,6 +106,19 @@ export const AppRegistry: Record<string, AppDefinition> = {
     defaultHeight: 500,
     resizable: false,
     icon: "https://gedit-text-editor.org/images/gedit-icon.png",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: false,
+  },
+  terminal: {
+    id: "terminal",
+    title: "Terminal",
+    component: Terminal,
+    defaultWidth: 700,
+    defaultHeight: 450,
+    minWidth: 500,
+    minHeight: 300,
+    icon: "https://icon.icepanel.io/Technology/png-shadow-512/Powershell.png",
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: false,
