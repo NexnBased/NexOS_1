@@ -9,6 +9,7 @@ import TextEditor from "../components/apps/TextEditor";
 import Terminal from "../components/apps/Terminal";
 import ImageViewer from "../components/apps/ImageViewer";
 import MarkdownViewer from "../components/apps/MarkdownViewer";
+import Settings from "../components/apps/Settings";
 
 export interface AppProps {
   width: number;
@@ -43,6 +44,7 @@ export const AppIds = {
   TERMINAL: "terminal",
   IMAGE_VIEWER: "imageviewer",
   MARKDOWN_VIEWER: "markdownviewer",
+  SETTINGS: "settings",
 } as const;
 
 export const AppRegistry: Record<string, AppDefinition> = {
@@ -70,6 +72,20 @@ export const AppRegistry: Record<string, AppDefinition> = {
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: true,
+  },
+  settings: {
+    id: "settings",
+    title: "Settings",
+    component: Settings,
+    defaultWidth: 560,
+    defaultHeight: 420,
+    minWidth: 420,
+    minHeight: 320,
+    resizable: true,
+    icon: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Settings_%28iOS%29.png",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: false,
   },
   calculator: {
     id: "calculator",

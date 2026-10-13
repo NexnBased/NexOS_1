@@ -45,11 +45,16 @@ function ImageViewer({ fileId }: AppProps) {
   }
 
   const src =
-    file.content && file.content.startsWith("data:") ? file.content : undefined;
+    file.content &&
+    (file.content.startsWith("data:") ||
+      file.content.startsWith("http://") ||
+      file.content.startsWith("https://"))
+      ? file.content
+      : undefined;
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-zinc-950 text-white">
-      <header className="flex items-center justify-between px-3 py-2 border-b border-white/6">
+      <header className="flex items-center justify-between px-3 py-2 border-b border-white/6 bg-zinc-800">
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold">{file.name}</span>
           {file.mimeType && (

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppRegistry } from "../app/AppRegistry";
 import { useWindowStore } from "../stores/WindowStore";
-import { Grid2X2 } from "lucide-react";
 import { useUIStore } from "../stores/UIStore";
 
 function Dock() {
@@ -56,7 +55,7 @@ function Dock() {
       aria-label="Application Dock"
       onPointerEnter={() => setDockHovered(true)}
       onPointerLeave={() => setDockHovered(false)}
-      className={`fixed bottom-4 left-1/2 z-9999 -translate-x-1/2 flex items-end gap-1.5 rounded-2xl bg-black/30 p-2 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-out
+      className={`fixed bottom-4 left-1/2 z-9999 -translate-x-1/2 flex justify-center items-center gap-1.5 rounded-2xl bg-black/30 p-2 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-out
         ${
           shouldHide
             ? "translate-y-[calc(100%+1rem)] opacity-0 pointer-events-none"
@@ -70,13 +69,9 @@ function Dock() {
         aria-label="Open applications"
         aria-expanded={launcherOpen}
         onClick={toggleLauncher}
-        className="group relative flex size-14 shrink-0 items-center justify-center rounded-xl text-white transition-all duration-150 ease-out hover:-translate-y-2 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white  bg-white transition-all duration-150 ease-out hover:-translate-y-2 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
       >
-        <Grid2X2
-          size={28}
-          strokeWidth={1.8}
-          className="transition-transform duration-150 group-hover:scale-110"
-        />
+        <img src="/favicon.svg" className="size-7" />
       </button>
       {apps.map((app) => {
         const window = windows.find((item) => item.appId === app.id);

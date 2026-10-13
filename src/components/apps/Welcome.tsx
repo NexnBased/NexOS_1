@@ -1,5 +1,3 @@
-import { XIcon } from "lucide-react";
-
 function Welcome() {
   return (
     <div className="size-full flex flex-col items-left">
@@ -26,9 +24,6 @@ function Welcome() {
         >
           Developer
         </a>
-        <button className="size-fit p-1 -ml-2 rounded-md font-semibold tracking-wider transition-all text-white bg-red-600 hover:bg-white/30">
-          <XIcon />
-        </button>
       </div>
     </div>
   );

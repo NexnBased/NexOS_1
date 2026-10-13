@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState, useEffect } from "react";
-import { AppRegistry } from "../../app/AppRegistry";
+import { AppRegistry, AppIds } from "../../app/AppRegistry";
 
 import Dock from "../Dock";
 import DesktopIcon from "./DesktopIcon";
@@ -21,6 +21,10 @@ function Desktop() {
   );
   const openWindow = useWindowStore((state) => state.openWindow);
 
+  const desktopIconSize = useUIStore((s) => s.desktopIconSize);
+  const backgroundUrl = useUIStore((s) => s.backgroundUrl);
+  const welcomeDismissed = useUIStore((s) => s.welcomeDismissed);
+
   useEffect(() => {
     const element = desktopRef.current;
     if (!element) {
@@ -41,9 +45,7 @@ function Desktop() {
     const observer = new ResizeObserver(updateSize);
     observer.observe(element);
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [setDesktopViewport]);
 
   const desktopApps = useMemo(() => {
@@ -58,19 +60,15 @@ function Desktop() {
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-
       if (
         target instanceof Element &&
         target.closest("[data-desktop-context-menu]")
-      ) {
+      )
         return;
-      }
       closeContextMenu();
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeContextMenu();
-      }
+      if (event.key === "Escape") closeContextMenu();
     };
 
     window.addEventListener("pointerdown", handlePointerDown);
@@ -83,31 +81,34 @@ function Desktop() {
   }, [closeContextMenu]);
 
   useEffect(() => {
-    const welcomeWasDismissed =
-      localStorage.getItem("nexos.welcome-dismissed") === "true";
-    if (!welcomeWasDismissed) {
-      openWindow("welcome");
+    if (!welcomeDismissed) {
+      openWindow(AppIds.WELCOME);
     }
-  }, [openWindow]);
+  }, [welcomeDismissed, openWindow]);
 
   const wallpaperUrl =
+    backgroundUrl ??
     "https://images8.alphacoders.com/136/thumb-1920-1363709.png";
+  const startX = 24;
+  const startY = 24;
+  const gap = Math.max(12, Math.round(desktopIconSize * 0.28));
+  const step = desktopIconSize + gap;
+  const columns = Math.max(
+    1,
+    Math.floor(Math.max(1, (viewport.width - startX) / step)),
+  );
 
   return (
     <main
       ref={desktopRef}
-      className="relative size-full overflow-hidden bg-cover bg-center bg-no-repeat"
+      className="relative size-full overflow-hidden bg-cover! bg-center! bg-no-repeat!"
       style={{ backgroundImage: `url(${wallpaperUrl})` }}
       onContextMenu={(event) => {
         event.preventDefault();
-        if (event.target !== event.currentTarget) {
-          return;
-        }
+        if (event.target !== event.currentTarget) return;
 
         const rect = desktopRef.current?.getBoundingClientRect();
-        if (!rect) {
-          return;
-        }
+        if (!rect) return;
 
         openContextMenu({
           x: event.clientX - rect.left,
@@ -115,9 +116,21 @@ function Desktop() {
         });
       }}
     >
-      {desktopApps.map((app, index) => (
-        <DesktopIcon x={24} y={24 + index * 96} key={app.id} appId={app.id} />
-      ))}
+      {desktopApps.map((app, index) => {
+        const col = index % columns;
+        const row = Math.floor(index / columns);
+        const x = startX + col * step;
+        const y = startY + row * step;
+        return (
+          <DesktopIcon
+            x={x}
+            y={y}
+            size={desktopIconSize}
+            key={app.id}
+            appId={app.id}
+          />
+        );
+      })}
 
       <AppLauncher />
       <DesktopContextMenu desktopRef={desktopRef} />
