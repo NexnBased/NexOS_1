@@ -1,6 +1,7 @@
 import { useRef, useMemo, useState, useEffect, type FormEvent } from "react";
 import { useWindowStore, useFileSystemStore } from "../../stores";
 import { type FSItem, RootID, TrashID } from "../../types/filesystem";
+import { AppIds } from "../../app/AppRegistry";
 
 interface TerminalLine {
   id: number;
@@ -328,7 +329,7 @@ function Terminal() {
           if (!target)
             throw new Error(`open: item not found: ${args[0] ?? ""}`);
           if (target.type === "folder") {
-            openWindow("files");
+            openWindow(AppIds.FILES);
             break;
           }
 
@@ -336,9 +337,7 @@ function Terminal() {
             target.mimeType?.startsWith("text/") ||
             target.mimeType === "application/json"
           ) {
-            openWindow("texteditor", {
-              fileId: target.id,
-            });
+            openWindow(AppIds.TEXTEDITOR, { fileId: target.id });
             break;
           }
 
@@ -389,7 +388,7 @@ function Terminal() {
           ]);
 
           setTimeout(() => {
-            closeWindow("terminal");
+            closeWindow(AppIds.TERMINAL);
           }, 300);
           break;
         }

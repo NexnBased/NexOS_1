@@ -31,6 +31,16 @@ export interface AppDefinition {
   showInDock?: boolean;
 }
 
+export const AppIds = {
+  WELCOME: "welcome",
+  FILES: "files",
+  CALCULATOR: "calculator",
+  NOTES: "notes",
+  CALENDAR: "calendar",
+  TEXTEDITOR: "texteditor",
+  TERMINAL: "terminal",
+} as const;
+
 export const AppRegistry: Record<string, AppDefinition> = {
   welcome: {
     id: "welcome",

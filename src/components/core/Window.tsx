@@ -39,17 +39,22 @@ function Window({
 
     e.stopPropagation();
     document.body.style.cursor = "nwse-resize";
-
     const startX = e.clientX;
     const startY = e.clientY;
     const startWidth = window.width;
     const startHeight = window.height;
 
     const onMouseMove = (ev: MouseEvent) => {
-      onResize?.({
-        width: startWidth + (ev.clientX - startX),
-        height: startHeight + (ev.clientY - startY),
-      });
+      const rawWidth = startWidth + (ev.clientX - startX);
+      const rawHeight = startHeight + (ev.clientY - startY);
+      const minW = window.minWidth ?? 100;
+      const minH = window.minHeight ?? 80;
+      const maxW = viewport ? Math.max(minW, viewport.width - window.x) : Number.POSITIVE_INFINITY;
+      const maxH = viewport ? Math.max(minH, viewport.height - window.y) : Number.POSITIVE_INFINITY;
+      const width = Math.min(Math.max(minW, rawWidth), maxW);
+      const height = Math.min(Math.max(minH, rawHeight), maxH);
+
+      onResize?.({ width, height });
     };
 
     const onMouseUp = () => {
@@ -122,9 +127,14 @@ function Window({
           const baseY = window.y;
 
           const onMouseMove = (ev: MouseEvent) => {
+            const desiredX = baseX + ev.clientX - startX;
+            const desiredY = baseY + ev.clientY - startY;
+            const maxX = viewport ? Math.max(0, viewport.width - window.width) : Number.POSITIVE_INFINITY;
+            const maxY = viewport ? Math.max(0, viewport.height - window.height) : Number.POSITIVE_INFINITY;
+
             onMove?.({
-              x: baseX + ev.clientX - startX,
-              y: baseY + ev.clientY - startY,
+              x: Math.min(Math.max(0, desiredX), maxX),
+              y: Math.min(Math.max(0, desiredY), maxY),
             });
           };
 
@@ -180,10 +190,10 @@ function Window({
 
       <div className="flex-1 w-full min-h-0 min-w-0 relative overflow-hidden bg-purple-200/50">
         <App
-          key={`${window.id}:${window.fileId ?? "Empty"}`}
+          key={`${window.id}:${window.fileId ?? "empty"}`}
           width={viewport?.width ?? window.width}
           height={viewport?.height ?? window.height}
-          fileId={window.fileId}
+          {...(("fileId" in window ? { fileId: (window as any).fileId } : {}))}
         />
       </div>
 

@@ -8,6 +8,7 @@ import {
 } from "../types/filesystem";
 
 const StorageVersion = 1;
+const MAX_FILE_CONTENT_SIZE = 1_000_000; // 1MB
 interface PersistedFS {
   version: number;
   items: FSItem[];
@@ -367,6 +368,10 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
       throw new Error("File name cannot be empty");
     }
 
+    if (content.length > MAX_FILE_CONTENT_SIZE) {
+      throw new Error("File content too large.");
+    }
+
     const state = get();
     if (
       parentId !== null &&
@@ -455,6 +460,8 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     set({ items });
   },
   updateFileContent: (id, content) => {
+    if (content.length > MAX_FILE_CONTENT_SIZE) throw new Error("File content too large.")
+
     const state = get();
     const item = state.items.find((entry) => entry.id === id);
 

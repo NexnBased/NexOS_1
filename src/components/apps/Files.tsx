@@ -26,6 +26,7 @@ import {
   RootID as rootID,
   TrashID as trashID,
 } from "../../types/filesystem";
+import { AppIds } from "../../app/AppRegistry";
 import { useFileSystemStore } from "../../stores/FileSystemStore";
 import { useWindowStore } from "../../stores/WindowStore";
 
@@ -271,7 +272,7 @@ function Files() {
     }
 
     if (isEditableTextFile(item)) {
-      openWindow("text-editor", { fileId: item.id });
+      openWindow(AppIds.TEXTEDITOR, { fileId: item.id });
       return;
     }
 
@@ -584,10 +585,7 @@ function Files() {
                           title="Open in Text Editor"
                           onClick={(event) => {
                             event.stopPropagation();
-
-                            openWindow("texteditor", {
-                              fileId: item.id,
-                            });
+                            openWindow(AppIds.TEXTEDITOR, { fileId: item.id });
                           }}
                           className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] text-purple-200 hover:bg-purple-500/15"
                         >
