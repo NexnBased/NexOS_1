@@ -8,7 +8,7 @@ import {
 } from "../types/filesystem";
 
 const StorageVersion = 1;
-const MAX_FILE_CONTENT_SIZE = 1_000_000; // 1MB
+const MAX_FILE_CONTENT_SIZE = 1_000_000;
 interface PersistedFS {
   version: number;
   items: FSItem[];

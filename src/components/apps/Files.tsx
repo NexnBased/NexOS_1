@@ -110,6 +110,36 @@ const uniqueName = (items: FSItem[], parentId: string | null, name: string) => {
   return candicate;
 };
 
+const formatSize = (bytes: number | null | undefined) => {
+  if (bytes === null || bytes === undefined) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const formatDate = (ts?: number) => {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return "";
+  }
+};
+
+const computeSize = (item: FSItem): number | null => {
+  if (item.type !== "file") return null;
+  if (!item.content) return 0;
+  try {
+    return new Blob([item.content]).size;
+  } catch {
+    try {
+      return new TextEncoder().encode(item.content).length;
+    } catch {
+      return null;
+    }
+  }
+};
+
 function Files() {
   const items = useFileSystemStore((state) => state.items);
   const createFolderInStore = useFileSystemStore((state) => state.createFolder);
@@ -356,7 +386,7 @@ function Files() {
                   setShowCreateMenu((value) => !value);
                 }}
                 title="New"
-                className={`flex h-8 w-full items-center justify-start p-1.5 gap-2 rounded-md! text-white/55 transition bg-zinc-900 hover:bg-zinc-600 hover:text-white ${showCreateMenu == true && "bg-white/[0.07] text-white"}`}
+                className={`flex h-8 w-full items-center justify-start p-1.5 gap-2 rounded-md! text-white/55 transition bg-zinc-900 hover:bg-zinc-600 hover:text-white ${showCreateMenu == true && "ring-1 ring-white/10"}`}
               >
                 <PlusIcon size={17} /> Create
               </button>
@@ -477,6 +507,7 @@ function Files() {
               {currentItems.map((item) => {
                 const selected = selectedId === item.id;
                 const renaming = renameId === item.id;
+                const filesize = computeSize(item);
                 return (
                   <div
                     key={item.id}
@@ -493,6 +524,22 @@ function Files() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter" && !renaming) {
                         handleItemDoubleClick(item);
+                      }
+                      if (event.key === "F2" && !renaming) {
+                        event.preventDefault();
+                        beginRename(item);
+                      }
+                      if (event.key === "Delete") {
+                        event.preventDefault();
+                        if (activeCurrentId === trashID)
+                          permanentlyDelete(item.id);
+                        else handleMoveToTrash(item.id);
+                      }
+                      if (event.key === " ") {
+                        event.preventDefault();
+                        setPreviewId((prev) =>
+                          prev === item.id ? null : item.id,
+                        );
                       }
                     }}
                     className={[
@@ -532,12 +579,27 @@ function Files() {
                           className="h-6 w-full min-w-0 rounded border border-white/15 bg-black/30 px-1 text-center text-[11px] text-white outline-none"
                         />
                       ) : (
-                        <div
-                          className="truncate px-0.5 text-[11px] text-white/60"
-                          title={item.name}
-                        >
-                          {item.name}
-                        </div>
+                        <>
+                          <div
+                            className="truncate px-0.5 text-[11px] text-white/60"
+                            title={item.name}
+                          >
+                            {item.name}
+                          </div>
+
+                          {/* Metadata line */}
+                          <div className="mt-1 text-[10px] text-white/30">
+                            {item.type === "file" ? (
+                              <>
+                                <span>{formatSize(filesize)}</span>
+                                <span className="mx-1">·</span>
+                                <span>{formatDate(item.modifiedAt)}</span>
+                              </>
+                            ) : (
+                              <span className="text-white/24">Folder</span>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
                     {selected && !renaming && (
@@ -551,6 +613,7 @@ function Files() {
                               handleRestore(item.id);
                             }}
                             className="flex h-6 w-6 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-purple-300"
+                            aria-label="Restore"
                           >
                             <RotateCcwIcon size={12} />
                           </button>
@@ -565,6 +628,7 @@ function Files() {
                               beginRename(item);
                             }}
                             className="flex h-6 w-6 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white"
+                            aria-label="Rename"
                           >
                             <PencilIcon size={12} />
                           </button>
@@ -584,6 +648,7 @@ function Files() {
                             else handleMoveToTrash(item.id);
                           }}
                           className="flex h-6 w-6 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-red-300"
+                          aria-label="Delete"
                         >
                           <Trash2Icon size={12} />
                         </button>
@@ -598,7 +663,10 @@ function Files() {
                           title="Open in Text Editor"
                           onClick={(event) => {
                             event.stopPropagation();
-                            openWindow(AppIds.TEXTEDITOR, { fileId: item.id });
+
+                            openWindow(AppIds.TEXTEDITOR, {
+                              fileId: item.id,
+                            });
                           }}
                           className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] text-purple-200 hover:bg-purple-500/15"
                         >
@@ -626,9 +694,16 @@ function Files() {
                 <div className="shrink-0 text-white/45">
                   {getFileIcon(previewItem, 16)}
                 </div>
-                <span className="truncate text-xs text-white/65">
-                  {previewItem.name}
-                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate text-xs text-white/65">
+                    {previewItem.name}
+                  </span>
+                  <span className="text-[11px] text-white/40">
+                    {previewItem.type === "file"
+                      ? `${formatSize(computeSize(previewItem))} · ${formatDate(previewItem.modifiedAt)}`
+                      : "Folder"}
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
