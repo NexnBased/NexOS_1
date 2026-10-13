@@ -11,7 +11,12 @@ describe("FileSystemStore", () => {
     const state = useFileSystemStore.getState();
     const folderId = state.createFolder("test-folder", RootID);
     expect(folderId).toBeTruthy();
-    const fileId = state.createFile("hello.txt", folderId, "hello world", "text/plain");
+    const fileId = state.createFile(
+      "hello.txt",
+      folderId,
+      "hello world",
+      "text/plain",
+    );
     expect(fileId).toBeTruthy();
     const file = state.getItem(fileId);
     expect(file).toBeDefined();

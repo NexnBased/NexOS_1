@@ -514,7 +514,10 @@ function Files() {
                     role="button"
                     tabIndex={0}
                     aria-selected={selected}
-                    onClick={(event) => { event.stopPropagation(); handleItemClick(item); }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleItemClick(item);
+                    }}
                     onDoubleClick={(event) => {
                       event.stopPropagation();
                       handleItemDoubleClick(item);
@@ -712,7 +715,7 @@ function Files() {
             </div>
             <div className="min-h-0 overflow-auto p-4">
               {getFileCategory(previewItem) === "text" ||
-                getFileCategory(previewItem) === "code" ? (
+              getFileCategory(previewItem) === "code" ? (
                 <pre className="whitespace-pre-wrap wrap-break-words rounded-xl bg-black/20 p-4 text-xs leading-6 text-white/65">
                   {previewItem.content || "Empty file"}
                 </pre>

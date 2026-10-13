@@ -45,7 +45,9 @@ describe("WindowStore", () => {
       windows: [...s.windows, w],
       nextZIndex: Math.max(s.nextZIndex, w.zIndex + 1),
     }));
-    const before = useWindowStore.getState().windows.find((x) => x.id === w.id)!;
+    const before = useWindowStore
+      .getState()
+      .windows.find((x) => x.id === w.id)!;
     const oldZ = before.zIndex;
     ws.focusWindow(w.id);
     const after = useWindowStore.getState().windows.find((x) => x.id === w.id)!;
@@ -62,9 +64,13 @@ describe("WindowStore", () => {
     }));
 
     ws.minimizeWindow(w.id);
-    expect(useWindowStore.getState().windows.find((x) => x.id === w.id)?.minimized).toBe(true);
+    expect(
+      useWindowStore.getState().windows.find((x) => x.id === w.id)?.minimized,
+    ).toBe(true);
     ws.restoreWindow(w.id);
-    expect(useWindowStore.getState().windows.find((x) => x.id === w.id)?.minimized).toBe(false);
+    expect(
+      useWindowStore.getState().windows.find((x) => x.id === w.id)?.minimized,
+    ).toBe(false);
   });
 
   it("maximizes and restores to previous bounds", () => {
@@ -75,19 +81,29 @@ describe("WindowStore", () => {
       nextZIndex: Math.max(s.nextZIndex, w.zIndex + 1),
     }));
     ws.maximizeWindow(w.id, { width: 800, height: 600 });
-    const maximized = useWindowStore.getState().windows.find((x) => x.id === w.id)!;
+    const maximized = useWindowStore
+      .getState()
+      .windows.find((x) => x.id === w.id)!;
     expect(maximized.maximized).toBe(true);
     expect(maximized.width).toBe(800);
     expect(maximized.height).toBe(600);
     ws.maximizeWindow(w.id, { width: 800, height: 600 });
-    const restored = useWindowStore.getState().windows.find((x) => x.id === w.id)!;
+    const restored = useWindowStore
+      .getState()
+      .windows.find((x) => x.id === w.id)!;
     expect(restored.maximized).toBe(false);
     expect(restored.width).toBeGreaterThanOrEqual(restored.minWidth);
   });
 
   it("moves and resizes windows with bounds enforcement", () => {
     const ws = useWindowStore.getState();
-    const w = makeWindow({ appId: AppIds.FILES, width: 300, height: 200, x: 10, y: 10 });
+    const w = makeWindow({
+      appId: AppIds.FILES,
+      width: 300,
+      height: 200,
+      x: 10,
+      y: 10,
+    });
     useWindowStore.setState((s) => ({
       windows: [...s.windows, w],
       nextZIndex: Math.max(s.nextZIndex, w.zIndex + 1),
@@ -97,7 +113,9 @@ describe("WindowStore", () => {
     expect(moved.x).toBe(50);
     expect(moved.y).toBe(60);
     ws.resizeWindow(w.id, { width: 220, height: 180 });
-    const resized = useWindowStore.getState().windows.find((x) => x.id === w.id)!;
+    const resized = useWindowStore
+      .getState()
+      .windows.find((x) => x.id === w.id)!;
     expect(resized.width).toBeGreaterThanOrEqual(resized.minWidth);
     expect(resized.height).toBeGreaterThanOrEqual(resized.minHeight);
   });
