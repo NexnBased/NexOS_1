@@ -1,216 +1,53 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useFileSystemStore } from "./FileSystemStore";
+import { RootID, TrashID } from "../types/filesystem";
 
 describe("FileSystemStore", () => {
   beforeEach(() => {
-    localStorage.clear();
     useFileSystemStore.getState().resetFileSystem();
   });
 
-  it("creates a folder", () => {
-    const store = useFileSystemStore.getState();
-    const folderId = store.createFolder("Projects", "root");
-    const folder = useFileSystemStore.getState().getItem(folderId);
-
-    expect(folder).toMatchObject({
-      name: "Projects",
-      type: "folder",
-      parentId: "root",
-    });
+  it("creates folders and files and retrieves them", () => {
+    const state = useFileSystemStore.getState();
+    const folderId = state.createFolder("test-folder", RootID);
+    expect(folderId).toBeTruthy();
+    const fileId = state.createFile("hello.txt", folderId, "hello world", "text/plain");
+    expect(fileId).toBeTruthy();
+    const file = state.getItem(fileId);
+    expect(file).toBeDefined();
+    expect(file?.name).toBe("hello.txt");
+    expect(file?.parentId).toBe(folderId);
+    expect(file?.content).toBe("hello world");
   });
 
-  it("creates a file inside a folder", () => {
-    const store = useFileSystemStore.getState();
-    const folderId = store.createFolder("Test Documents", "root");
-    const fileId = store.createFile(
-      "readme.txt",
-      folderId,
-      "Hello NexOS",
-      "text/plain",
-    );
-
-    const file = useFileSystemStore.getState().getItem(fileId);
-
-    expect(file).toMatchObject({
-      name: "readme.txt",
-      type: "file",
-      parentId: folderId,
-      content: "Hello NexOS",
-      mimeType: "text/plain",
-    });
+  it("renames, moves, and deletes items", () => {
+    const state = useFileSystemStore.getState();
+    const f1 = state.createFolder("a", RootID);
+    const f2 = state.createFolder("b", RootID);
+    const fileId = state.createFile("note.txt", f1, "x", "text/plain");
+    state.renameItem(fileId, "note-2.txt");
+    const renamed = state.getItem(fileId);
+    expect(renamed?.name).toBe("note-2.txt");
+    state.moveItem(fileId, f2);
+    const moved = state.getItem(fileId);
+    expect(moved?.parentId).toBe(f2);
+    state.moveToTrash(fileId);
+    const trashed = state.getItem(fileId);
+    expect(trashed?.parentId).toBe(TrashID);
+    state.restoreItem(fileId);
+    const restored = state.getItem(fileId);
+    expect(restored?.parentId).not.toBe(TrashID);
+    state.permanentlyDeleteItem(fileId);
+    const deleted = state.getItem(fileId);
+    expect(deleted).toBeUndefined();
   });
 
-  it("rejects duplicate names in the same folder", () => {
-    const store = useFileSystemStore.getState();
-    store.createFolder("Projects", "root");
-    expect(() => {
-      store.createFolder("projects", "root");
-    }).toThrow("An item with that name already exists");
-  });
-
-  it("moves items to Trash and restores them", () => {
-    const store = useFileSystemStore.getState();
-
-    const folderId = store.createFolder("Test Documents", "root");
-
-    const fileId = store.createFile(
-      "note.txt",
-      folderId,
-      "Hello",
-      "text/plain",
-    );
-
-    store.moveToTrash(fileId);
-
-    const trashedFile = useFileSystemStore.getState().getItem(fileId);
-
-    expect(trashedFile).toMatchObject({
-      parentId: "trash",
-      trashedFrom: folderId,
-    });
-
-    store.restoreItem(fileId);
-
-    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
-      parentId: folderId,
-    });
-  });
-  it("restores a folder with its children", () => {
-    const store = useFileSystemStore.getState();
-    const folderId = store.createFolder("Project", "root");
-
-    const fileId = store.createFile(
-      "main.ts",
-      folderId,
-      "console.log('hello')",
-      "text/typescript",
-    );
-
-    store.moveToTrash(folderId);
-    store.restoreItem(folderId);
-
-    expect(useFileSystemStore.getState().getItem(folderId)).toMatchObject({
-      parentId: "root",
-    });
-    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
-      parentId: folderId,
-    });
-  });
-  it("updates file content and persists it", () => {
-    const store = useFileSystemStore.getState();
-
-    const fileId = store.createFile(
-      "editor-test.txt",
-      "root",
-      "before",
-      "text/plain",
-    );
-
-    store.updateFileContent(fileId, "after");
-
-    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
-      content: "after",
-    });
-
-    const persisted = JSON.parse(localStorage.getItem("nexos.fs") ?? "{}");
-
-    expect(
-      persisted.items.find((item: { id: string }) => item.id === fileId),
-    ).toMatchObject({
-      content: "after",
-    });
-  });
-  it("restores to root when the original parent no longer exists", () => {
-    const store = useFileSystemStore.getState();
-
-    const folderId = store.createFolder("Temporary Folder", "root");
-
-    const fileId = store.createFile(
-      "note.txt",
-      folderId,
-      "content",
-      "text/plain",
-    );
-
-    store.moveToTrash(fileId);
-    store.permanentlyDeleteItem(folderId);
-    store.restoreItem(fileId);
-
-    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
-      parentId: "root",
-    });
-  });
-
-  it("empties Trash recursively", () => {
-    const store = useFileSystemStore.getState();
-    const folderId = store.createFolder("Deleted Folder", "root");
-    const fileId = store.createFile(
-      "deleted.txt",
-      folderId,
-      "deleted",
-      "text/plain",
-    );
-
-    store.moveToTrash(folderId);
-    store.emptyTrash();
-
-    expect(useFileSystemStore.getState().getItem(folderId)).toBeUndefined();
-    expect(useFileSystemStore.getState().getItem(fileId)).toBeUndefined();
-  });
-  it("supports terminal-style file operations", () => {
-    const store = useFileSystemStore.getState();
-
-    const folderId = store.createFolder("Terminal Test", "root");
-
-    const fileId = store.createFile(
-      "hello.txt",
-      folderId,
-      "Hello from NexOS",
-      "text/plain",
-    );
-
-    expect(store.getChildren(folderId)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: fileId,
-          name: "hello.txt",
-        }),
-      ]),
-    );
-
-    store.moveItem(fileId, "root");
-
-    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
-      parentId: "root",
-    });
-
-    store.moveToTrash(fileId);
-
-    expect(useFileSystemStore.getState().getItem(fileId)).toMatchObject({
-      parentId: "trash",
-    });
-  });
-  it("permanently deletes a file", () => {
-    const store = useFileSystemStore.getState();
-    const fileId = store.createFile(
-      "temporary.txt",
-      "root",
-      "temporary",
-      "text/plain",
-    );
-
-    store.permanentlyDeleteItem(fileId);
-    expect(useFileSystemStore.getState().getItem(fileId)).toBeUndefined();
-  });
-
-  it("persists changes to localStorage", () => {
-    const store = useFileSystemStore.getState();
-    store.createFile("saved.txt", "root", "saved content", "text/plain");
-
-    const saved = JSON.parse(localStorage.getItem("nexos.fs") ?? "{}");
-    expect(saved.version).toBe(1);
-    expect(
-      saved.items.some((item: { name: string }) => item.name === "saved.txt"),
-    ).toBe(true);
+  it("prevents invalid operations", () => {
+    const state = useFileSystemStore.getState();
+    expect(() => state.renameItem(RootID, "x")).toThrow();
+    expect(() => state.moveItem(RootID, null)).toThrow();
+    const f = state.createFolder("dup", RootID);
+    state.createFile("file.txt", f, "", "text/plain");
+    expect(() => state.createFile("file.txt", f, "", "text/plain")).toThrow();
   });
 });

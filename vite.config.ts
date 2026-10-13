@@ -12,4 +12,7 @@ export default defineConfig({
     globals: true,
     clearMocks: true,
   },
+  build: {
+    chunkSizeWarningLimit: 800,
+  },
 });

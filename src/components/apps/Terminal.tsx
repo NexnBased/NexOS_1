@@ -9,6 +9,9 @@ interface TerminalLine {
   kind: "input" | "output" | "error";
 }
 
+const HISTORY_LIMIT = 200;
+const LINES_LIMIT = 500;
+
 const tokenize = (input: string) => {
   return (
     input.match(/"[^"]*"|'[^']*'|\S+/g)?.map((token) => {
@@ -23,6 +26,34 @@ const tokenize = (input: string) => {
     }) ?? []
   );
 };
+
+function formatDateShort(ts?: number) {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch {
+    return "";
+  }
+}
+
+function computeSize(item: FSItem): number | null {
+  if (item.type !== "file") return null;
+  if (!item.content) return 0;
+  try {
+    return new Blob([item.content]).size;
+  } catch {
+    try {
+      return new TextEncoder().encode(item.content).length;
+    } catch {
+      return null;
+    }
+  }
+}
+
+function permString(item: FSItem) {
+  const t = item.type === "folder" ? "d" : "-";
+  return `${t}rwxr-xr-x`;
+}
 
 function Terminal() {
   const items = useFileSystemStore((state) => state.items);
@@ -49,6 +80,7 @@ function Terminal() {
   const inputRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
   const nextLineId = useRef(1);
+
   const currentDirectory = useMemo(
     () =>
       items.find(
@@ -71,6 +103,7 @@ function Terminal() {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
   useEffect(() => {
     const output = outputRef.current;
     if (!output) return;
@@ -82,13 +115,19 @@ function Terminal() {
   }, [lines]);
 
   const addLines = (newLines: Array<Pick<TerminalLine, "text" | "kind">>) => {
-    setLines((previous) => [
-      ...previous,
-      ...newLines.map((line) => ({
-        ...line,
-        id: nextLineId.current++,
-      })),
-    ]);
+    setLines((previous) => {
+      const appended = [
+        ...previous,
+        ...newLines.map((line) => ({
+          ...line,
+          id: nextLineId.current++,
+        })),
+      ];
+      if (appended.length > LINES_LIMIT) {
+        return appended.slice(appended.length - LINES_LIMIT);
+      }
+      return appended;
+    });
   };
 
   const findChild = (parentId: string, name: string): FSItem | undefined => {
@@ -111,7 +150,6 @@ function Terminal() {
       if (segment === ".") continue;
       if (segment === "..") {
         const current = items.find((item) => item.id === directoryId);
-
         directoryId = current?.parentId ?? RootID;
         continue;
       }
@@ -167,10 +205,7 @@ function Terminal() {
       switch (commandName) {
         case "help": {
           addLines([
-            {
-              kind: "output",
-              text: "Available commands:",
-            },
+            { kind: "output", text: "Available commands:" },
             {
               kind: "output",
               text: "  help                 Show this help message",
@@ -185,16 +220,15 @@ function Terminal() {
             },
             {
               kind: "output",
-              text: "  cd <path>            Change directory",
+              text: "  ls -la [path]        List directory contents with metadata",
             },
+            { kind: "output", text: "  cd <path>            Change directory" },
+            { kind: "output", text: "  cat <file>           Read a text file" },
             {
               kind: "output",
-              text: "  cat <file>           Read a text file",
+              text: "  stat <file>          Show metadata for a file/folder",
             },
-            {
-              kind: "output",
-              text: "  mkdir <name>         Create a folder",
-            },
+            { kind: "output", text: "  mkdir <name>         Create a folder" },
             {
               kind: "output",
               text: "  touch <name>         Create an empty text file",
@@ -211,10 +245,7 @@ function Terminal() {
               kind: "output",
               text: "  clear                Clear the terminal",
             },
-            {
-              kind: "output",
-              text: "  echo <text>          Print text",
-            },
+            { kind: "output", text: "  echo <text>          Print text" },
             {
               kind: "output",
               text: "  exit, quit           Close the terminal",
@@ -224,17 +255,14 @@ function Terminal() {
         }
 
         case "pwd": {
-          addLines([
-            {
-              text: currentPath,
-              kind: "output",
-            },
-          ]);
+          addLines([{ text: currentPath, kind: "output" }]);
           break;
         }
 
         case "ls": {
-          const target = args[0] ? resolveDirectory(args[0]) : currentDirectory;
+          const showLong = args[0] === "-la" || args[0] === "-al";
+          const pathArg = showLong ? args[1] : args[0];
+          const target = pathArg ? resolveDirectory(pathArg) : currentDirectory;
 
           if (!target) throw new Error("Directory not found");
 
@@ -245,15 +273,31 @@ function Terminal() {
               return a.name.localeCompare(b.name);
             });
 
-          addLines([
-            {
-              text:
-                children.length > 0
-                  ? children.map(formatItem).join("    ")
-                  : "(empty)",
-              kind: "output",
-            },
-          ]);
+          if (showLong) {
+            const linesOut = children.map((child) => {
+              const perms = permString(child);
+              const size = computeSize(child);
+              const sizeStr = size === null ? "-" : String(size);
+              const mtime = formatDateShort(child.modifiedAt);
+              const name = formatItem(child);
+              return `${perms} ${sizeStr.padStart(8, " ")}  ${mtime}  ${name}`;
+            });
+            if (linesOut.length === 0) {
+              addLines([{ text: "(empty)", kind: "output" }]);
+            } else {
+              addLines(linesOut.map((t) => ({ text: t, kind: "output" })));
+            }
+          } else {
+            addLines([
+              {
+                text:
+                  children.length > 0
+                    ? children.map(formatItem).join("    ")
+                    : "(empty)",
+                kind: "output",
+              },
+            ]);
+          }
           break;
         }
 
@@ -270,10 +314,36 @@ function Terminal() {
           if (!target || target.type !== "file")
             throw new Error(`cat: file not found: ${args[0] ?? ""}`);
 
+          addLines([{ text: target.content ?? "", kind: "output" }]);
+          break;
+        }
+
+        case "stat": {
+          const target = args[0] ? resolveItem(args[0]) : undefined;
+          if (!target)
+            throw new Error(`stat: item not found: ${args[0] ?? ""}`);
+
+          const size = computeSize(target);
           addLines([
+            { kind: "output", text: `id: ${target.id}` },
+            { kind: "output", text: `name: ${target.name}` },
+            { kind: "output", text: `type: ${target.type}` },
+            { kind: "output", text: `mime: ${target.mimeType ?? "-"}` },
+            { kind: "output", text: `size: ${size === null ? "-" : size}` },
             {
-              text: target.content ?? "",
               kind: "output",
+              text: `createdAt: ${formatDateShort(target.createdAt)}`,
+            },
+            {
+              kind: "output",
+              text: `modifiedAt: ${formatDateShort(target.modifiedAt)}`,
+            },
+            { kind: "output", text: `parentId: ${target.parentId ?? "-"}` },
+            {
+              kind: "output",
+              text: `path: ${getPath(target.id)
+                .map((p) => p.name)
+                .join("/")}`,
             },
           ]);
           break;
@@ -284,12 +354,7 @@ function Terminal() {
           if (!name) throw new Error("mkdir: missing folder name");
           createFolder(name, currentDirectoryId);
 
-          addLines([
-            {
-              text: `Created folder: ${name}`,
-              kind: "output",
-            },
-          ]);
+          addLines([{ text: `Created folder: ${name}`, kind: "output" }]);
           break;
         }
 
@@ -299,12 +364,7 @@ function Terminal() {
 
           createFile(name, currentDirectoryId, "", "text/plain");
 
-          addLines([
-            {
-              text: `Created file: ${name}`,
-              kind: "output",
-            },
-          ]);
+          addLines([{ text: `Created file: ${name}`, kind: "output" }]);
           break;
         }
 
@@ -316,10 +376,7 @@ function Terminal() {
 
           moveToTrash(target.id);
           addLines([
-            {
-              text: `Moved to Trash: ${target.name}`,
-              kind: "output",
-            },
+            { text: `Moved to Trash: ${target.name}`, kind: "output" },
           ]);
           break;
         }
@@ -341,16 +398,24 @@ function Terminal() {
             break;
           }
 
+          if (target.mimeType?.startsWith("image/")) {
+            openWindow(AppIds.IMAGE_VIEWER, { fileId: target.id });
+            break;
+          }
+
+          if (
+            target.mimeType === "text/markdown" ||
+            target.name.toLowerCase().endsWith(".md")
+          ) {
+            openWindow(AppIds.MARKDOWN_VIEWER, { fileId: target.id });
+            break;
+          }
+
           throw new Error("open: no associated application");
         }
 
         case "echo": {
-          addLines([
-            {
-              text: args.join(" "),
-              kind: "output",
-            },
-          ]);
+          addLines([{ text: args.join(" "), kind: "output" }]);
           break;
         }
 
@@ -380,12 +445,7 @@ function Terminal() {
 
         case "exit":
         case "quit": {
-          addLines([
-            {
-              text: "Goodbye!",
-              kind: "output",
-            },
-          ]);
+          addLines([{ text: "Goodbye!", kind: "output" }]);
 
           setTimeout(() => {
             closeWindow(AppIds.TERMINAL);
@@ -395,10 +455,7 @@ function Terminal() {
 
         default:
           addLines([
-            {
-              text: `command not found: ${commandName}`,
-              kind: "error",
-            },
+            { text: `command not found: ${commandName}`, kind: "error" },
           ]);
       }
     } catch (error) {
@@ -416,7 +473,12 @@ function Terminal() {
     const trimmedCommand = command.trim();
     if (!trimmedCommand) return;
 
-    setCommandHistory((previous) => [...previous, trimmedCommand]);
+    setCommandHistory((previous) => {
+      const next = [...previous, trimmedCommand];
+      if (next.length > HISTORY_LIMIT)
+        return next.slice(next.length - HISTORY_LIMIT);
+      return next;
+    });
     setHistoryIndex(-1);
     executeCommand(trimmedCommand);
     setCommand("");
@@ -447,6 +509,11 @@ function Terminal() {
 
       setHistoryIndex(nextIndex);
       setCommand(commandHistory[nextIndex] ?? "");
+    }
+
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "l") {
+      event.preventDefault();
+      setLines([]);
     }
   };
 
