@@ -271,6 +271,19 @@ function Files() {
       return;
     }
 
+    if (item.mimeType?.startsWith("image/")) {
+      openWindow(AppIds.IMAGE_VIEWER, { fileId: item.id });
+      return;
+    }
+
+    if (
+      item.mimeType === "text/markdown" ||
+      item.name.toLowerCase().endsWith(".md")
+    ) {
+      openWindow(AppIds.MARKDOWN_VIEWER, { fileId: item.id });
+      return;
+    }
+
     if (isEditableTextFile(item)) {
       openWindow(AppIds.TEXTEDITOR, { fileId: item.id });
       return;

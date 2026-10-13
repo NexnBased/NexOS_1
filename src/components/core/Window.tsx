@@ -49,8 +49,12 @@ function Window({
       const rawHeight = startHeight + (ev.clientY - startY);
       const minW = window.minWidth ?? 100;
       const minH = window.minHeight ?? 80;
-      const maxW = viewport ? Math.max(minW, viewport.width - window.x) : Number.POSITIVE_INFINITY;
-      const maxH = viewport ? Math.max(minH, viewport.height - window.y) : Number.POSITIVE_INFINITY;
+      const maxW = viewport
+        ? Math.max(minW, viewport.width - window.x)
+        : Number.POSITIVE_INFINITY;
+      const maxH = viewport
+        ? Math.max(minH, viewport.height - window.y)
+        : Number.POSITIVE_INFINITY;
       const width = Math.min(Math.max(minW, rawWidth), maxW);
       const height = Math.min(Math.max(minH, rawHeight), maxH);
 
@@ -129,8 +133,12 @@ function Window({
           const onMouseMove = (ev: MouseEvent) => {
             const desiredX = baseX + ev.clientX - startX;
             const desiredY = baseY + ev.clientY - startY;
-            const maxX = viewport ? Math.max(0, viewport.width - window.width) : Number.POSITIVE_INFINITY;
-            const maxY = viewport ? Math.max(0, viewport.height - window.height) : Number.POSITIVE_INFINITY;
+            const maxX = viewport
+              ? Math.max(0, viewport.width - window.width)
+              : Number.POSITIVE_INFINITY;
+            const maxY = viewport
+              ? Math.max(0, viewport.height - window.height)
+              : Number.POSITIVE_INFINITY;
 
             onMove?.({
               x: Math.min(Math.max(0, desiredX), maxX),
@@ -191,9 +199,9 @@ function Window({
       <div className="flex-1 w-full min-h-0 min-w-0 relative overflow-hidden bg-purple-200/50">
         <App
           key={`${window.id}:${window.fileId ?? "empty"}`}
-          width={viewport?.width ?? window.width}
-          height={viewport?.height ?? window.height}
-          {...(("fileId" in window ? { fileId: (window as any).fileId } : {}))}
+          width={window.width}
+          height={window.height}
+          fileId={window.fileId}
         />
       </div>
 

@@ -286,7 +286,11 @@ function saveFS(items: FSItem[]) {
     items,
   };
 
-  localStorage.setItem(StorageKey, JSON.stringify(payload));
+  try {
+    localStorage.setItem(StorageKey, JSON.stringify(payload));
+  } catch (err) {
+    console.error("Failed to persist NexOS filesystem to localStorage:", err);
+  }
 }
 
 const normalizeName = (name: string) => {
@@ -408,13 +412,17 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     return get().items.find((item) => item.id === id);
   },
   getChildren: (parentId) => {
-    return get()
-      .items.filter((item) => item.parentId === parentId)
+    const state = get();
+    if (
+      parentId !== null &&
+      !state.items.some((it) => it.id === parentId && it.type === "folder")
+    ) {
+      return [];
+    }
+    return state.items
+      .filter((item) => item.parentId === parentId)
       .sort((a, b) => {
-        if (a.type !== b.type) {
-          return a.type === "folder" ? -1 : 1;
-        }
-
+        if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
         return a.name.localeCompare(b.name);
       });
   },
@@ -460,7 +468,8 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     set({ items });
   },
   updateFileContent: (id, content) => {
-    if (content.length > MAX_FILE_CONTENT_SIZE) throw new Error("File content too large.")
+    if (content.length > MAX_FILE_CONTENT_SIZE)
+      throw new Error("File content too large.");
 
     const state = get();
     const item = state.items.find((entry) => entry.id === id);

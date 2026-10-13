@@ -7,6 +7,8 @@ import Calendar from "../components/apps/Calendar";
 import Calculator from "../components/apps/Calculator";
 import TextEditor from "../components/apps/TextEditor";
 import Terminal from "../components/apps/Terminal";
+import ImageViewer from "../components/apps/ImageViewer";
+import MarkdownViewer from "../components/apps/MarkdownViewer";
 
 export interface AppProps {
   width: number;
@@ -39,6 +41,8 @@ export const AppIds = {
   CALENDAR: "calendar",
   TEXTEDITOR: "texteditor",
   TERMINAL: "terminal",
+  IMAGE_VIEWER: "imageviewer",
+  MARKDOWN_VIEWER: "markdownviewer",
 } as const;
 
 export const AppRegistry: Record<string, AppDefinition> = {
@@ -117,7 +121,7 @@ export const AppRegistry: Record<string, AppDefinition> = {
     resizable: false,
     icon: "https://gedit-text-editor.org/images/gedit-icon.png",
     showInLauncher: true,
-    showOnDesktop: true,
+    showOnDesktop: false,
     showInDock: false,
   },
   terminal: {
@@ -131,6 +135,34 @@ export const AppRegistry: Record<string, AppDefinition> = {
     icon: "https://icon.icepanel.io/Technology/png-shadow-512/Powershell.png",
     showInLauncher: true,
     showOnDesktop: true,
+    showInDock: false,
+  },
+  imageviewer: {
+    id: "imageviewer",
+    title: "Image Viewer",
+    component: ImageViewer,
+    defaultWidth: 800,
+    defaultHeight: 600,
+    minWidth: 320,
+    minHeight: 200,
+    resizable: true,
+    icon: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Foto_%28iOS%29.png",
+    showInLauncher: true,
+    showOnDesktop: false,
+    showInDock: false,
+  },
+  markdownviewer: {
+    id: "markdownviewer",
+    title: "Markdown Viewer",
+    component: MarkdownViewer,
+    defaultWidth: 800,
+    defaultHeight: 600,
+    minWidth: 420,
+    minHeight: 300,
+    resizable: true,
+    icon: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/Visual_Studio_Code_1.17_icon.svg/250px-Visual_Studio_Code_1.17_icon.svg.png",
+    showInLauncher: true,
+    showOnDesktop: false,
     showInDock: false,
   },
 };
