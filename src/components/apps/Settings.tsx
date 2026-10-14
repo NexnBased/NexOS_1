@@ -6,24 +6,24 @@ import { useUIStore } from "../../stores/UIStore";
 const PRESET_BACKGROUNDS = [
   { id: "default", label: "Default", url: "" },
   {
-    id: "[yqkl97]",
-    label: "[yqkl97]",
-    url: "https://w.wallhaven.cc/full/yq/wallhaven-yqkl97.jpg",
+    id: "[valentinromero]",
+    label: "[valentinromero]",
+    url: "https://i.pinimg.com/1200x/13/41/45/13414519583c03a8576b45d6171c11c9.jpg",
   },
   {
-    id: "[3q6m6y]",
-    label: "[3q6m6y]",
-    url: "https://w.wallhaven.cc/full/3q/wallhaven-3q6m6y.png",
+    id: "[mount]",
+    label: "[mount]",
+    url: "https://i.pinimg.com/1200x/e5/08/26/e50826bf40f25ed9445738cb7bfb6ba2.jpg",
   },
   {
-    id: "[d8vvlo]",
-    label: "[d8vvlo]",
-    url: "https://w.wallhaven.cc/full/d8/wallhaven-d8vvlo.png",
+    id: "[patafixixatap]",
+    label: "[patafixixatap]",
+    url: "https://i.pinimg.com/736x/2a/a0/55/2aa0551f4827c36d8175ec844143affc.jpg",
   },
   {
-    id: "[7jeozo]",
-    label: "[7jeozo]",
-    url: "https://w.wallhaven.cc/full/7j/wallhaven-7jeozo.jpg",
+    id: "[batman]",
+    label: "[batman]",
+    url: "https://i.pinimg.com/736x/72/c3/5b/72c35bfb8bf0bca7547b121c3b81e9d4.jpg",
   },
 ];
 

@@ -88,7 +88,7 @@ function Desktop() {
 
   const wallpaperUrl =
     backgroundUrl ??
-    "https://images8.alphacoders.com/136/thumb-1920-1363709.png";
+    "https://i.pinimg.com/736x/92/8b/3e/928b3ea8b5d7f8b992e5fa887789109f.jpg";
   const startX = 24;
   const startY = 24;
   const gap = Math.max(12, Math.round(desktopIconSize * 0.28));
