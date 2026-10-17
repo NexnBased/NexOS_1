@@ -1,4 +1,3 @@
-// src/components/apps/Settings.tsx
 import { useState } from "react";
 import { useFileSystemStore } from "../../stores/FileSystemStore";
 import { useUIStore } from "../../stores/UIStore";
@@ -6,24 +5,19 @@ import { useUIStore } from "../../stores/UIStore";
 const PRESET_BACKGROUNDS = [
   { id: "default", label: "Default", url: "" },
   {
-    id: "[valentinromero]",
-    label: "[valentinromero]",
-    url: "https://i.pinimg.com/1200x/13/41/45/13414519583c03a8576b45d6171c11c9.jpg",
+    id: "[brandflowers]",
+    label: "[brandflowers]",
+    url: "https://microsoft.design/wp-content/uploads/2025/07/Brand-Flowers-Static-1.png",
   },
   {
-    id: "[mount]",
-    label: "[mount]",
-    url: "https://i.pinimg.com/1200x/e5/08/26/e50826bf40f25ed9445738cb7bfb6ba2.jpg",
+    id: "[opalineblue]",
+    label: "[opalineblue]",
+    url: "https://microsoft.design/wp-content/uploads/2025/12/Opaline_blue_DM-1920x1080.jpg",
   },
   {
-    id: "[patafixixatap]",
-    label: "[patafixixatap]",
-    url: "https://i.pinimg.com/736x/2a/a0/55/2aa0551f4827c36d8175ec844143affc.jpg",
-  },
-  {
-    id: "[batman]",
-    label: "[batman]",
-    url: "https://i.pinimg.com/736x/72/c3/5b/72c35bfb8bf0bca7547b121c3b81e9d4.jpg",
+    id: "[neondreams]",
+    label: "[neondreams]",
+    url: "https://microsoft.design/wp-content/uploads/2026/03/Neon-Dreams-1920x1080.jpg",
   },
 ];
 

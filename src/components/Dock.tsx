@@ -55,7 +55,7 @@ function Dock() {
       aria-label="Application Dock"
       onPointerEnter={() => setDockHovered(true)}
       onPointerLeave={() => setDockHovered(false)}
-      className={`fixed bottom-4 left-1/2 z-9999 -translate-x-1/2 flex justify-center items-center gap-1.5 rounded-2xl bg-black/30 p-2 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-out
+      className={`fixed bottom-4 left-1/2 z-9999 -translate-x-1/2 flex justify-center items-center gap-1.5 rounded-2xl bg-black/40 p-2 pl-4 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-out
         ${
           shouldHide
             ? "translate-y-[calc(100%+1rem)] opacity-0 pointer-events-none"

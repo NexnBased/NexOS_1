@@ -1,6 +1,16 @@
-# NexOS | Version 1
+# NexOS
 
 A lightweight WebOS built with Vite React, Zustand and TailwindCSS
+
+## Update
+
+- Added: Browser
+- Added: Music Player
+- Smaller and floating panel Top Bar
+- Fixed Dock size
+- Redesigned AppLauncher Search
+- Added: Weather
+- Topbar now shows Country ISO & Weather temperature
 
 ## Features
 
@@ -23,6 +33,8 @@ A lightweight WebOS built with Vite React, Zustand and TailwindCSS
 - Settings
 - Welcome
 - Files
+- Browser
+- Weather
 
 ## Techstack
 
@@ -55,3 +67,8 @@ A lightweight WebOS built with Vite React, Zustand and TailwindCSS
 ## DEVELOPER
 
 [NexnBASED](https://github.com/NexnBased)
+
+## Assets
+
+Font from [Google Fonts](https://fonts.google.com/)
+Wallpaper from Microsoft and few other sites

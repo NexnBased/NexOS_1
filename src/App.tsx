@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import "./App.css";
-import Topbar from "./components/Topbar";
 import Desktop from "./components/core/Desktop";
 import { useUIStore } from "./stores/UIStore";
 
@@ -23,11 +22,7 @@ function App() {
 
   return (
     <main className="flex h-screen w-screen flex-col overflow-hidden">
-      <Topbar />
-
-      <section className="min-h-0 flex-1">
-        <Desktop />
-      </section>
+      <Desktop />
     </main>
   );
 }

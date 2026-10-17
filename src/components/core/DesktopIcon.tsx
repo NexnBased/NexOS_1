@@ -25,7 +25,7 @@ function DesktopIcon({ appId, x, y, size = 84 }: Props) {
         top: y,
         width: buttonWidth,
       }}
-      className="absolute flex flex-col items-center gap-1 rounded-lg p-2 text-white select-none hover:bg-white/10 focus:outline-none focus:bg-white/15"
+      className="absolute mt-14 flex flex-col items-center gap-1 rounded-lg p-2 text-white select-none hover:bg-white/10 focus:outline-none focus:bg-white/15"
     >
       <img
         src={app.icon}

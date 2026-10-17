@@ -10,6 +10,9 @@ import Terminal from "../components/apps/Terminal";
 import ImageViewer from "../components/apps/ImageViewer";
 import MarkdownViewer from "../components/apps/MarkdownViewer";
 import Settings from "../components/apps/Settings";
+import WebBrowser from "../components/apps/WebBrowser";
+import MusicPlayer from "../components/apps/MusicPlayer";
+import Weather from "../components/apps/Weather";
 
 export interface AppProps {
   width: number;
@@ -45,6 +48,9 @@ export const AppIds = {
   IMAGE_VIEWER: "imageviewer",
   MARKDOWN_VIEWER: "markdownviewer",
   SETTINGS: "settings",
+  WEBBROWSER: "webbrowser",
+  MUSICPLAYER: "musicplayer",
+  WEATHER: "weather",
 } as const;
 
 export const AppRegistry: Record<string, AppDefinition> = {
@@ -87,14 +93,24 @@ export const AppRegistry: Record<string, AppDefinition> = {
     showOnDesktop: true,
     showInDock: false,
   },
+  webbrowser: {
+    id: "webbrowser",
+    title: "Web Browser",
+    component: WebBrowser,
+    defaultWidth: 900,
+    defaultHeight: 600,
+    resizable: false,
+    icon: "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Internet_Explorer_10%2B11_logo.svg/500px-Internet_Explorer_10%2B11_logo.svg.png",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: true,
+  },
   calculator: {
     id: "calculator",
     title: "Calculator",
     component: Calculator,
     defaultWidth: 350,
     defaultHeight: 500,
-    minWidth: 350,
-    minHeight: 500,
     resizable: false,
     icon: "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Calculator_Icon_%28macOS_27%29.png/960px-Calculator_Icon_%28macOS_27%29.png",
     showInLauncher: true,
@@ -113,6 +129,30 @@ export const AppRegistry: Record<string, AppDefinition> = {
     showInLauncher: true,
     showOnDesktop: true,
     showInDock: true,
+  },
+  musicplayer: {
+    id: "musicplayer",
+    title: "Music Player",
+    component: MusicPlayer,
+    defaultWidth: 800,
+    defaultHeight: 550,
+    resizable: false,
+    icon: "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5f/Apple_Music_icon.svg/960px-Apple_Music_icon.svg.png",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: false,
+  },
+  weather: {
+    id: "weather",
+    title: "Weather",
+    component: Weather,
+    defaultWidth: 800,
+    defaultHeight: 550,
+    resizable: false,
+    icon: "https://upload.wikimedia.org/wikipedia/commons/e/e2/Weather_%28iOS_26%29.png",
+    showInLauncher: true,
+    showOnDesktop: true,
+    showInDock: false,
   },
   calendar: {
     id: "calendar",

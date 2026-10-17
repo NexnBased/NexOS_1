@@ -9,6 +9,7 @@ import DesktopContextMenu from "./DesktopContextMenu";
 
 import { useUIStore } from "../../stores/UIStore";
 import { useWindowStore } from "../../stores/WindowStore";
+import Topbar from "../Topbar";
 
 function Desktop() {
   const desktopRef = useRef<HTMLElement>(null);
@@ -88,7 +89,7 @@ function Desktop() {
 
   const wallpaperUrl =
     backgroundUrl ??
-    "https://i.pinimg.com/736x/92/8b/3e/928b3ea8b5d7f8b992e5fa887789109f.jpg";
+    "https://wallpapercave.com/wp/wp14816721.webp";
   const startX = 24;
   const startY = 24;
   const gap = Math.max(12, Math.round(desktopIconSize * 0.28));
@@ -116,6 +117,7 @@ function Desktop() {
         });
       }}
     >
+      <Topbar />
       {desktopApps.map((app, index) => {
         const col = index % columns;
         const row = Math.floor(index / columns);
